@@ -1,13 +1,4 @@
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -15,53 +6,34 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.movieRoutes = void 0;
 const express_1 = __importDefault(require("express"));
 const tmdb_service_1 = require("../services/tmdb.service");
+const express_async_handler_1 = __importDefault(require("express-async-handler"));
 const router = express_1.default.Router();
+exports.movieRoutes = router;
 // Get popular movies
-router.get('/popular', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        const page = parseInt(req.query.page) || 1;
-        const movies = yield (0, tmdb_service_1.getPopularMovies)(page);
-        res.json(movies);
-    }
-    catch (error) {
-        res.status(500).json({ error: error.message });
-    }
+router.get('/popular', (0, express_async_handler_1.default)(async (req, res) => {
+    const page = parseInt(req.query.page) || 1;
+    const movies = await tmdb_service_1.tmdbService.fetchPopularMovies(page);
+    res.json(movies);
 }));
 // Search movies
-router.get('/search', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        const { query } = req.query;
-        const page = parseInt(req.query.page) || 1;
-        if (!query) {
-            return res.status(400).json({ error: 'Search query is required' });
-        }
-        const movies = yield (0, tmdb_service_1.searchMovies)(query, page);
-        res.json(movies);
+router.get('/search', (0, express_async_handler_1.default)(async (req, res) => {
+    const { query } = req.query;
+    const page = parseInt(req.query.page) || 1;
+    if (!query) {
+        res.status(400).json({ error: 'Search query is required' });
+        return;
     }
-    catch (error) {
-        res.status(500).json({ error: error.message });
-    }
+    const movies = await tmdb_service_1.tmdbService.searchMovies(query, page);
+    res.json(movies);
 }));
 // Get movie details
-router.get('/:id', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        const movieId = parseInt(req.params.id);
-        const movie = yield (0, tmdb_service_1.getMovieDetails)(movieId);
-        res.json(movie);
+router.get('/:id', (0, express_async_handler_1.default)(async (req, res) => {
+    let movieId;
+    movieId = parseInt(req.params.id);
+    if (isNaN(movieId)) {
+        res.status(400).json({ error: 'Invalid movie ID' });
+        return;
     }
-    catch (error) {
-        res.status(500).json({ error: error.message });
-    }
+    const movie = await tmdb_service_1.tmdbService.fetchMovieDetails(movieId);
+    res.json(movie);
 }));
-// Get movie trailer
-router.get('/:id/trailer', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        const movieId = parseInt(req.params.id);
-        const trailerKey = yield (0, tmdb_service_1.getMovieTrailer)(movieId);
-        res.json({ trailerKey });
-    }
-    catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-}));
-exports.movieRoutes = router;

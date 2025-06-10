@@ -60,6 +60,8 @@ const reviewSchema = new mongoose_1.Schema({
 }, {
     timestamps: true,
 });
+// Indexes
+reviewSchema.index({ userId: 1 }); // Index for fetching reviews by user
 // Compound index to ensure one review per user per movie
 reviewSchema.index({ movieId: 1, userId: 1 }, { unique: true });
 exports.Review = mongoose_1.default.model('Review', reviewSchema);
