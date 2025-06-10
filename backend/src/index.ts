@@ -11,7 +11,7 @@ import { userRoutes } from './routes/user.routes';
 import logger from './utils/logger';
 import { errorHandler } from './middleware/error.middleware';
 
-// Handle uncaught exceptions
+// Handle uncaught exception
 process.on('uncaughtException', (err) => {
   logger.error('UNCAUGHT EXCEPTION! 💥 Shutting down...', err);
   process.exit(1); // Exit with a failure code
