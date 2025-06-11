@@ -7,7 +7,6 @@ import helmet from 'helmet';
 import compression from 'compression';
 import { movieRoutes } from './routes/movie.routes';
 import { reviewRoutes } from './routes/review.routes';
-import { userRoutes } from './routes/user.routes';
 import logger from './utils/logger';
 import { errorHandler } from './middleware/error.middleware';
 
@@ -46,7 +45,6 @@ app.use(express.json());
 // Routes
 app.use('/api/movies', movieRoutes);
 app.use('/api/reviews', reviewRoutes);
-app.use('/api/users', userRoutes);
 
 // Health check endpoint
 app.get('/health', (req, res) => {
