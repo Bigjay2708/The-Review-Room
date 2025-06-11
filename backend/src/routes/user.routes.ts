@@ -85,6 +85,17 @@ router.post(
       return;
     }
 
+    // Temporarily log values for debugging
+    // REMOVE THIS LOGGING IN PRODUCTION!
+    console.log('Login Attempt:', {
+      identifierReceived: identifier,
+      passwordReceived: password,
+      userFoundId: user._id,
+      userFoundUsername: user.username,
+      userFoundEmail: user.email,
+      userFoundHashedPassword: user.password,
+    });
+
     const isMatch = await user.comparePassword(password);
 
     if (!isMatch) {
