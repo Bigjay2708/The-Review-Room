@@ -6,7 +6,7 @@ import { User, IUser } from '../models/user.model';
 import { auth } from '../middleware/auth.middleware';
 import logger from '../utils/logger';
 import asyncHandler from 'express-async-handler';
-import { authLimiter } from '../middleware/rateLimit.middleware';
+// import { authLimiter } from '../middleware/rateLimit.middleware'; // Removed for debugging
 
 interface AuthRequest extends Request {
   user?: IUser;
