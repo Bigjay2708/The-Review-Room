@@ -35,10 +35,17 @@ router.post(
 
     const { username, email, password } = req.body;
 
-    // Check if user exists
+    // Check if email already exists
     let user = await User.findOne({ email });
     if (user) {
-      res.status(400).json({ message: 'User already exists' });
+      res.status(400).json({ message: 'User with this email already exists' });
+      return;
+    }
+
+    // Check if username already exists
+    user = await User.findOne({ username });
+    if (user) {
+      res.status(400).json({ message: 'User with this username already exists' });
       return;
     }
 
@@ -56,7 +63,7 @@ router.post(
   '/login',
   authLimiter,
   [
-    check('email', 'Please include a valid email').isEmail(),
+    check('identifier', 'Please provide a valid email or username').not().isEmpty(),
     check('password', 'Password is required').exists(),
   ],
   asyncHandler(async (req: Request, res: Response) => {
@@ -66,15 +73,19 @@ router.post(
       return;
     }
 
-    const { email, password } = req.body;
-    const user = await User.findOne({ email });
+    const { identifier, password } = req.body;
+
+    // Find user by email or username
+    const user = await User.findOne({
+      $or: [{ email: identifier }, { username: identifier }],
+    });
 
     if (!user) {
       res.status(400).json({ message: 'Invalid login credentials' });
       return;
     }
 
-    const isMatch = await bcrypt.compare(password, user.password);
+    const isMatch = await user.comparePassword(password);
 
     if (!isMatch) {
       res.status(400).json({ message: 'Invalid login credentials' });
@@ -82,7 +93,15 @@ router.post(
     }
 
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET as string, { expiresIn: '1h' });
-    res.status(200).json({ message: 'Logged in successfully', token });
+    res.status(200).json({
+      message: 'Logged in successfully',
+      token,
+      user: {
+        id: user._id,
+        username: user.username,
+        email: user.email,
+      },
+    });
   })
 );
 

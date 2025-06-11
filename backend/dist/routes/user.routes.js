@@ -25,10 +25,16 @@ router.post('/register', rateLimit_middleware_1.authLimiter, [
         return;
     }
     const { username, email, password } = req.body;
-    // Check if user exists
+    // Check if email already exists
     let user = await user_model_1.User.findOne({ email });
     if (user) {
-        res.status(400).json({ message: 'User already exists' });
+        res.status(400).json({ message: 'User with this email already exists' });
+        return;
+    }
+    // Check if username already exists
+    user = await user_model_1.User.findOne({ username });
+    if (user) {
+        res.status(400).json({ message: 'User with this username already exists' });
         return;
     }
     const hashedPassword = await bcryptjs_1.default.hash(password, 8);
@@ -39,7 +45,7 @@ router.post('/register', rateLimit_middleware_1.authLimiter, [
 }));
 // Login user
 router.post('/login', rateLimit_middleware_1.authLimiter, [
-    (0, express_validator_1.check)('email', 'Please include a valid email').isEmail(),
+    (0, express_validator_1.check)('identifier', 'Please provide a valid email or username').not().isEmpty(),
     (0, express_validator_1.check)('password', 'Password is required').exists(),
 ], (0, express_async_handler_1.default)(async (req, res) => {
     const errors = (0, express_validator_1.validationResult)(req);
@@ -47,19 +53,30 @@ router.post('/login', rateLimit_middleware_1.authLimiter, [
         res.status(400).json({ errors: errors.array() });
         return;
     }
-    const { email, password } = req.body;
-    const user = await user_model_1.User.findOne({ email });
+    const { identifier, password } = req.body;
+    // Find user by email or username
+    const user = await user_model_1.User.findOne({
+        $or: [{ email: identifier }, { username: identifier }],
+    });
     if (!user) {
         res.status(400).json({ message: 'Invalid login credentials' });
         return;
     }
-    const isMatch = await bcryptjs_1.default.compare(password, user.password);
+    const isMatch = await user.comparePassword(password);
     if (!isMatch) {
         res.status(400).json({ message: 'Invalid login credentials' });
         return;
     }
     const token = jsonwebtoken_1.default.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
-    res.status(200).json({ message: 'Logged in successfully', token });
+    res.status(200).json({
+        message: 'Logged in successfully',
+        token,
+        user: {
+            id: user._id,
+            username: user.username,
+            email: user.email,
+        },
+    });
 }));
 // Get user profile
 router.get('/profile', auth_middleware_1.auth, (0, express_async_handler_1.default)(async (req, res) => {
