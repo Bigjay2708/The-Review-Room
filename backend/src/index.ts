@@ -28,6 +28,9 @@ logger.info('MONGODB_URI from process.env:', process.env.MONGODB_URI);
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// Trust the first proxy (Render's proxy)
+app.set('trust proxy', 1);
+
 // Configure CORS options
 const corsOptions = {
   origin: process.env.CORS_ORIGIN || 'http://localhost:3000', // Allow only your frontend origin
