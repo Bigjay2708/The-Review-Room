@@ -14,48 +14,22 @@ import {
 } from '@mui/material';
 import {
   Menu as MenuIcon,
-  AccountCircle,
   Movie as MovieIcon,
-  RateReview as ReviewIcon,
 } from '@mui/icons-material';
-import { useAuth } from '../hooks/useAuth';
 
 const Navigation: React.FC = () => {
-  const { user, logout } = useAuth();
   const navigate = useNavigate();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   const [mobileMenuAnchor, setMobileMenuAnchor] = useState<null | HTMLElement>(null);
-  const [userMenuAnchor, setUserMenuAnchor] = useState<null | HTMLElement>(null);
 
   const handleMobileMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
     setMobileMenuAnchor(event.currentTarget);
   };
 
-  const handleUserMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
-    setUserMenuAnchor(event.currentTarget);
-  };
-
   const handleMenuClose = () => {
     setMobileMenuAnchor(null);
-    setUserMenuAnchor(null);
-  };
-
-  const handleLogout = () => {
-    handleMenuClose();
-    logout();
-    navigate('/login');
-  };
-
-  const handleProfile = () => {
-    handleMenuClose();
-    navigate('/profile');
-  };
-
-  const handleMyReviews = () => {
-    handleMenuClose();
-    navigate('/profile');
   };
 
   const handleMovies = () => {
@@ -73,23 +47,6 @@ const Navigation: React.FC = () => {
         <MovieIcon sx={{ mr: 1 }} />
         Movies
       </MenuItem>
-      {user && (
-        <MenuItem onClick={handleMyReviews}>
-          <ReviewIcon sx={{ mr: 1 }} />
-          My Reviews
-        </MenuItem>
-      )}
-    </Menu>
-  );
-
-  const renderUserMenu = (
-    <Menu
-      anchorEl={userMenuAnchor}
-      open={Boolean(userMenuAnchor)}
-      onClose={handleMenuClose}
-    >
-      <MenuItem onClick={handleProfile}>Profile</MenuItem>
-      <MenuItem onClick={handleLogout}>Logout</MenuItem>
     </Menu>
   );
 
@@ -133,36 +90,6 @@ const Navigation: React.FC = () => {
             >
               Movies
             </Button>
-            {user ? (
-              <>
-                <Button
-                  color="inherit"
-                  component={RouterLink}
-                  to="/profile"
-                  startIcon={<ReviewIcon />}
-                >
-                  My Reviews
-                </Button>
-                <IconButton
-                  edge="end"
-                  color="inherit"
-                  aria-label="account"
-                  onClick={handleUserMenuOpen}
-                >
-                  <AccountCircle />
-                </IconButton>
-                {renderUserMenu}
-              </>
-            ) : (
-              <>
-                <Button color="inherit" component={RouterLink} to="/login">
-                  Login
-                </Button>
-                <Button color="inherit" component={RouterLink} to="/register">
-                  Register
-                </Button>
-              </>
-            )}
           </Box>
         )}
       </Toolbar>

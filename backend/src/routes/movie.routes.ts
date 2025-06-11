@@ -1,40 +1,46 @@
-import express from 'express';
-import { tmdbService } from '../services/tmdb.service';
-import { auth } from '../middleware/auth.middleware';
-import logger from '../utils/logger';
+import express, { Request, Response } from 'express';
+import axios from 'axios';
 import asyncHandler from 'express-async-handler';
 
 const router = express.Router();
+const TMDB_API_KEY = process.env.TMDB_API_KEY;
+const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
 
 // Get popular movies
-router.get('/popular', asyncHandler(async (req, res) => {
-  const page = parseInt(req.query.page as string) || 1;
-  const movies = await tmdbService.fetchPopularMovies(page);
-  res.json(movies);
+router.get('/popular', asyncHandler(async (req: Request, res: Response) => {
+  const page = req.query.page || 1;
+  const response = await axios.get(
+    `${TMDB_BASE_URL}/movie/popular?api_key=${TMDB_API_KEY}&page=${page}`
+  );
+  res.json(response.data);
 }));
 
 // Search movies
-router.get('/search', asyncHandler(async (req, res) => {
-  const { query } = req.query;
-  const page = parseInt(req.query.page as string) || 1;
-  if (!query) {
-    res.status(400).json({ error: 'Search query is required' });
-    return;
-  }
-  const movies = await tmdbService.searchMovies(query as string, page);
-  res.json(movies);
+router.get('/search', asyncHandler(async (req: Request, res: Response) => {
+  const { query, page = 1 } = req.query;
+  const response = await axios.get(
+    `${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&query=${query}&page=${page}`
+  );
+  res.json(response.data);
 }));
 
 // Get movie details
-router.get('/:id', asyncHandler(async (req, res) => {
-  let movieId: number | undefined;
-  movieId = parseInt(req.params.id);
-  if (isNaN(movieId)) {
-    res.status(400).json({ error: 'Invalid movie ID' });
-    return;
-  }
-  const movie = await tmdbService.fetchMovieDetails(movieId);
-  res.json(movie);
+router.get('/:id', asyncHandler(async (req: Request, res: Response) => {
+  const response = await axios.get(
+    `${TMDB_BASE_URL}/movie/${req.params.id}?api_key=${TMDB_API_KEY}`
+  );
+  res.json(response.data);
 }));
 
-export { router as movieRoutes }; 
+// Get movie trailer
+router.get('/:id/trailer', asyncHandler(async (req: Request, res: Response) => {
+  const response = await axios.get(
+    `${TMDB_BASE_URL}/movie/${req.params.id}/videos?api_key=${TMDB_API_KEY}`
+  );
+  const trailer = response.data.results.find(
+    (video: any) => video.type === 'Trailer'
+  );
+  res.json({ key: trailer?.key });
+}));
+
+export const movieRoutes = router; 

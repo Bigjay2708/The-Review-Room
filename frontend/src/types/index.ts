@@ -1,58 +1,39 @@
-export interface User {
-  _id: string;
-  username: string;
-  email: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
 export interface Movie {
+  adult: boolean;
+  backdrop_path: string | null;
+  genre_ids: number[];
   id: number;
-  title: string;
+  original_language: string;
+  original_title: string;
   overview: string;
-  poster_path: string;
-  backdrop_path: string;
+  popularity: number;
+  poster_path: string | null;
   release_date: string;
+  title: string;
+  video: boolean;
   vote_average: number;
-  genres?: {
-    id: number;
-    name: string;
-  }[];
+  vote_count: number;
+  genres?: Array<{ id: number; name: string }>;
 }
 
 export interface Review {
   _id: string;
-  movieId: number;
   userId: string;
+  movieId: number;
   rating: number;
-  content: string;
+  comment: string;
   createdAt: string;
   updatedAt: string;
-  user?: User;
-  movie?: Movie;
-}
-
-export interface AuthResponse {
-  token: string;
-  user: User;
-}
-
-export interface LoginCredentials {
-  email: string;
-  password: string;
-}
-
-export interface RegisterCredentials extends LoginCredentials {
   username: string;
 }
 
 export interface ReviewFormData {
   movieId: number;
   rating: number;
-  content: string;
+  comment: string;
 }
 
 export interface UpdateReviewData {
-  rating: number;
-  content: string;
-} 
+  rating?: number;
+  comment?: string;
+}
