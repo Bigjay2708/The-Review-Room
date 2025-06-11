@@ -38,15 +38,12 @@ export interface AuthResponse {
 }
 
 export interface LoginCredentials {
-  identifier: string;
-  password: string;
-  loginType: 'email' | 'username';
-}
-
-export interface RegisterCredentials {
-  username: string;
   email: string;
   password: string;
+}
+
+export interface RegisterCredentials extends LoginCredentials {
+  username: string;
 }
 
 export interface ReviewFormData {

@@ -55,12 +55,6 @@ userSchema.pre('save', async function (next) {
 userSchema.methods.comparePassword = async function (
   candidatePassword: string
 ): Promise<boolean> {
-  // Temporarily log the passwords for debugging
-  // REMOVE THIS LOGGING IN PRODUCTION!
-  console.log('Comparing password:', {
-    candidatePassword: candidatePassword, // The password entered by the user
-    storedHashedPassword: this.password, // The hashed password from the database
-  });
   return bcrypt.compare(candidatePassword, this.password);
 };
 

@@ -9,10 +9,7 @@ import {
   Link,
   Box,
   Alert,
-  IconButton,
-  InputAdornment,
 } from '@mui/material';
-import { Visibility, VisibilityOff } from '@mui/icons-material';
 import { useAuth } from '../hooks/useAuth';
 
 const Register: React.FC = () => {
@@ -24,8 +21,6 @@ const Register: React.FC = () => {
     password: '',
     confirmPassword: '',
   });
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [formError, setFormError] = useState('');
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -34,35 +29,19 @@ const Register: React.FC = () => {
       ...prev,
       [name]: value,
     }));
-    setFormError('');
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormError('');
 
-    // Validate username
-    if (formData.username.length < 3) {
-      setFormError('Username must be at least 3 characters long');
-      return;
-    }
-
-    // Validate email
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(formData.email)) {
-      setFormError('Please enter a valid email address');
-      return;
-    }
-
-    // Validate password
-    if (formData.password.length < 6) {
-      setFormError('Password must be at least 6 characters long');
-      return;
-    }
-
-    // Check password match
     if (formData.password !== formData.confirmPassword) {
       setFormError('Passwords do not match');
+      return;
+    }
+
+    if (formData.password.length < 6) {
+      setFormError('Password must be at least 6 characters long');
       return;
     }
 
@@ -72,14 +51,6 @@ const Register: React.FC = () => {
     } catch (err) {
       // Error is handled by the auth context
     }
-  };
-
-  const handleClickShowPassword = () => {
-    setShowPassword(!showPassword);
-  };
-
-  const handleClickShowConfirmPassword = () => {
-    setShowConfirmPassword(!showConfirmPassword);
   };
 
   return (
@@ -104,7 +75,6 @@ const Register: React.FC = () => {
             onChange={handleChange}
             margin="normal"
             required
-            helperText="Username must be at least 3 characters long"
           />
           <TextField
             fullWidth
@@ -115,54 +85,26 @@ const Register: React.FC = () => {
             onChange={handleChange}
             margin="normal"
             required
-            helperText="Enter a valid email address"
           />
           <TextField
             fullWidth
             label="Password"
             name="password"
-            type={showPassword ? 'text' : 'password'}
+            type="password"
             value={formData.password}
             onChange={handleChange}
             margin="normal"
             required
-            helperText="Password must be at least 6 characters long"
-            InputProps={{
-              endAdornment: (
-                <InputAdornment position="end">
-                  <IconButton
-                    aria-label="toggle password visibility"
-                    onClick={handleClickShowPassword}
-                    edge="end"
-                  >
-                    {showPassword ? <VisibilityOff /> : <Visibility />}
-                  </IconButton>
-                </InputAdornment>
-              ),
-            }}
           />
           <TextField
             fullWidth
             label="Confirm Password"
             name="confirmPassword"
-            type={showConfirmPassword ? 'text' : 'password'}
+            type="password"
             value={formData.confirmPassword}
             onChange={handleChange}
             margin="normal"
             required
-            InputProps={{
-              endAdornment: (
-                <InputAdornment position="end">
-                  <IconButton
-                    aria-label="toggle confirm password visibility"
-                    onClick={handleClickShowConfirmPassword}
-                    edge="end"
-                  >
-                    {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
-                  </IconButton>
-                </InputAdornment>
-              ),
-            }}
           />
           <Button
             type="submit"

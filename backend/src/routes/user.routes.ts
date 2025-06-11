@@ -6,7 +6,7 @@ import { User, IUser } from '../models/user.model';
 import { auth } from '../middleware/auth.middleware';
 import logger from '../utils/logger';
 import asyncHandler from 'express-async-handler';
-// import { authLimiter } from '../middleware/rateLimit.middleware'; // Removed for debugging
+import { authLimiter } from '../middleware/rateLimit.middleware';
 
 interface AuthRequest extends Request {
   user?: IUser;
@@ -17,7 +17,7 @@ const router = express.Router();
 // Register a new user
 router.post(
   '/register',
-  // authLimiter, // Temporarily commented out for debugging
+  authLimiter,
   [
     check('username', 'Username is required').not().isEmpty(),
     check('email', 'Please include a valid email').isEmail(),
@@ -27,10 +27,6 @@ router.post(
     ).isLength({ min: 6 }),
   ],
   asyncHandler(async (req: Request, res: Response) => {
-    // Temporarily log the entire request body for debugging
-    // REMOVE THIS LOGGING IN PRODUCTION!
-    console.log('Login Request Body:', req.body);
-
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       res.status(400).json({ errors: errors.array() });
@@ -39,17 +35,10 @@ router.post(
 
     const { username, email, password } = req.body;
 
-    // Check if email already exists
+    // Check if user exists
     let user = await User.findOne({ email });
     if (user) {
-      res.status(400).json({ message: 'User with this email already exists' });
-      return;
-    }
-
-    // Check if username already exists
-    user = await User.findOne({ username });
-    if (user) {
-      res.status(400).json({ message: 'User with this username already exists' });
+      res.status(400).json({ message: 'User already exists' });
       return;
     }
 
@@ -65,46 +54,27 @@ router.post(
 // Login user
 router.post(
   '/login',
-  // authLimiter, // Temporarily commented out for debugging
+  authLimiter,
   [
-    check('identifier', 'Please provide a valid email or username').not().isEmpty(),
+    check('email', 'Please include a valid email').isEmail(),
     check('password', 'Password is required').exists(),
   ],
   asyncHandler(async (req: Request, res: Response) => {
-    // Temporarily log the entire request body for debugging
-    // REMOVE THIS LOGGING IN PRODUCTION!
-    console.log('Login Request Body:', req.body);
-
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       res.status(400).json({ errors: errors.array() });
       return;
     }
 
-    const { identifier, password } = req.body;
-
-    // Find user by email or username
-    const user = await User.findOne({
-      $or: [{ email: identifier }, { username: identifier }],
-    });
+    const { email, password } = req.body;
+    const user = await User.findOne({ email });
 
     if (!user) {
       res.status(400).json({ message: 'Invalid login credentials' });
       return;
     }
 
-    // Temporarily log values for debugging
-    // REMOVE THIS LOGGING IN PRODUCTION!
-    console.log('Login Attempt:', {
-      identifierReceived: identifier,
-      passwordReceived: password,
-      userFoundId: user._id,
-      userFoundUsername: user.username,
-      userFoundEmail: user.email,
-      userFoundHashedPassword: user.password,
-    });
-
-    const isMatch = await user.comparePassword(password);
+    const isMatch = await bcrypt.compare(password, user.password);
 
     if (!isMatch) {
       res.status(400).json({ message: 'Invalid login credentials' });
@@ -112,15 +82,7 @@ router.post(
     }
 
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET as string, { expiresIn: '1h' });
-    res.status(200).json({
-      message: 'Logged in successfully',
-      token,
-      user: {
-        id: user._id,
-        username: user.username,
-        email: user.email,
-      },
-    });
+    res.status(200).json({ message: 'Logged in successfully', token });
   })
 );
 
