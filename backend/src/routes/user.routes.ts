@@ -17,7 +17,7 @@ const router = express.Router();
 // Register a new user
 router.post(
   '/register',
-  authLimiter,
+  // authLimiter, // Temporarily commented out for debugging
   [
     check('username', 'Username is required').not().isEmpty(),
     check('email', 'Please include a valid email').isEmail(),
@@ -27,6 +27,10 @@ router.post(
     ).isLength({ min: 6 }),
   ],
   asyncHandler(async (req: Request, res: Response) => {
+    // Temporarily log the entire request body for debugging
+    // REMOVE THIS LOGGING IN PRODUCTION!
+    console.log('Login Request Body:', req.body);
+
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       res.status(400).json({ errors: errors.array() });
@@ -61,7 +65,7 @@ router.post(
 // Login user
 router.post(
   '/login',
-  authLimiter,
+  // authLimiter, // Temporarily commented out for debugging
   [
     check('identifier', 'Please provide a valid email or username').not().isEmpty(),
     check('password', 'Password is required').exists(),
