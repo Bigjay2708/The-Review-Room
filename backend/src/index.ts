@@ -39,6 +39,18 @@ const corsOptions = {
 // Middleware
 app.use(helmet());
 app.use(compression());
+
+// Early logging for all incoming requests
+// REMOVE THIS LOGGING IN PRODUCTION!
+app.use((req, res, next) => {
+  console.log('Incoming Request:', {
+    method: req.method,
+    url: req.url,
+    headers: req.headers,
+  });
+  next();
+});
+
 app.use(cors(corsOptions));
 app.use(express.json());
 
