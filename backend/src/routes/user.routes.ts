@@ -67,6 +67,10 @@ router.post(
     check('password', 'Password is required').exists(),
   ],
   asyncHandler(async (req: Request, res: Response) => {
+    // Temporarily log the entire request body for debugging
+    // REMOVE THIS LOGGING IN PRODUCTION!
+    console.log('Login Request Body:', req.body);
+
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       res.status(400).json({ errors: errors.array() });
