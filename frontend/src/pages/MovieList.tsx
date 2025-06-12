@@ -11,12 +11,10 @@ import {
   TextField,
   IconButton,
   CircularProgress,
-  Alert,
   Pagination,
-  Rating,
 } from '@mui/material';
 import { Search as SearchIcon } from '@mui/icons-material';
-import { movies } from '../services/api';
+import { fetchPopularMovies, searchMovies } from '../services/api';
 import { Movie } from '../types';
 
 const MovieList: React.FC = () => {
@@ -24,7 +22,7 @@ const MovieList: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [movieList, setMovieList] = useState<Movie[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
@@ -35,11 +33,11 @@ const MovieList: React.FC = () => {
   const fetchMovies = async () => {
     try {
       setLoading(true);
-      const response = await movies.getPopular(page);
-      setMovieList(response.results);
-      setTotalPages(response.total_pages);
+      const response = await fetchPopularMovies(page);
+      setMovieList(response);
+      setTotalPages(response.length > 0 ? 500 : 1); // Placeholder, adjust based on actual API response
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to fetch movies');
+      setError(err.response?.data?.error || 'Failed to fetch popular movies');
     } finally {
       setLoading(false);
     }
@@ -54,9 +52,9 @@ const MovieList: React.FC = () => {
 
     try {
       setLoading(true);
-      const response = await movies.search(searchQuery, 1);
-      setMovieList(response.results);
-      setTotalPages(response.total_pages);
+      const response = await searchMovies(searchQuery, 1);
+      setMovieList(response);
+      setTotalPages(response.length > 0 ? 500 : 1); // Placeholder
       setPage(1);
     } catch (err: any) {
       setError(err.response?.data?.error || 'Failed to search movies');
@@ -80,7 +78,7 @@ const MovieList: React.FC = () => {
   if (error && !movieList.length) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="60vh">
-        <Alert severity="error">{error}</Alert>
+        <Typography color="error">{error}</Typography>
       </Box>
     );
   }
@@ -130,17 +128,6 @@ const MovieList: React.FC = () => {
                 <Typography gutterBottom variant="h6" component="h2" noWrap>
                   {movie.title}
                 </Typography>
-                <Box display="flex" alignItems="center" mb={1}>
-                  <Rating
-                    value={movie.vote_average / 2}
-                    readOnly
-                    precision={0.5}
-                    size="small"
-                  />
-                  <Typography variant="body2" color="text.secondary" ml={1}>
-                    ({movie.vote_average.toFixed(1)})
-                  </Typography>
-                </Box>
                 <Typography variant="body2" color="text.secondary">
                   {new Date(movie.release_date).toLocaleDateString()}
                 </Typography>
@@ -164,4 +151,4 @@ const MovieList: React.FC = () => {
   );
 };
 
-export default MovieList; 
+export default MovieList;
