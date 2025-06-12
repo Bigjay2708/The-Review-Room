@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
-import { loginUser, registerUser, loginWithGoogle, loginWithGithub } from '../services/api';
+import { loginUser, registerUser } from '../services/api';
 
 interface User {
   id: string;
@@ -15,8 +15,6 @@ interface AuthContextType {
   login: (email: string, password: string, rememberMe?: boolean) => Promise<void>;
   register: (username: string, email: string, password: string) => Promise<void>;
   logout: () => void;
-  loginWithGoogle: (token: string) => Promise<void>;
-  loginWithGithub: (code: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -60,36 +58,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, []);
 
-  const handleGoogleLogin = useCallback(async (token: string) => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const response = await loginWithGoogle(token);
-      setUser(response.user);
-      sessionStorage.setItem('token', response.token);
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Google login failed');
-      throw err;
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  const handleGithubLogin = useCallback(async (code: string) => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const response = await loginWithGithub(code);
-      setUser(response.user);
-      sessionStorage.setItem('token', response.token);
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Github login failed');
-      throw err;
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
   const logout = useCallback(() => {
     setUser(null);
     localStorage.removeItem('token');
@@ -104,8 +72,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     login,
     register,
     logout,
-    loginWithGoogle: handleGoogleLogin,
-    loginWithGithub: handleGithubLogin,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

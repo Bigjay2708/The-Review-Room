@@ -96,27 +96,6 @@ export const resetPassword = async (token: string, newPassword: string): Promise
   }
 };
 
-// --- Social Login API Calls ---
-export const loginWithGoogle = async (token: string): Promise<AuthResponse> => {
-  try {
-    const response = await axios.post(`${API_BASE_URL}/users/google-login`, { token });
-    return response.data;
-  } catch (error) {
-    console.error('Google login error:', error);
-    throw error;
-  }
-};
-
-export const loginWithGithub = async (code: string): Promise<AuthResponse> => {
-  try {
-    const response = await axios.post(`${API_BASE_URL}/users/github-login`, { code });
-    return response.data;
-  } catch (error) {
-    console.error('Github login error:', error);
-    throw error;
-  }
-};
-
 // --- Email Verification API Calls ---
 export const verifyEmail = async (token: string): Promise<void> => {
   try {

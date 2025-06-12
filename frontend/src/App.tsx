@@ -11,7 +11,6 @@ import ProtectedRoute from './components/ProtectedRoute';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import { AuthProvider } from './hooks/useAuth';
-import GithubCallback from './pages/GithubCallback';
 
 const theme = createTheme({
   palette: {
@@ -54,7 +53,6 @@ const App: React.FC = () => {
               <Route path="/register" element={<Register />} />
               <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/reset-password" element={<ResetPassword />} />
-              <Route path="/auth/github/callback" element={<GithubCallback />} />
               <Route path="/" element={<Navigate to="/movies" replace />} />
               <Route element={<ProtectedRoute />}>
                 <Route path="/movies" element={<MovieList />} />

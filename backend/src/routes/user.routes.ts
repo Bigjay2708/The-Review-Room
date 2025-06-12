@@ -4,7 +4,6 @@ import jwt from 'jsonwebtoken';
 import { User } from '../models/user.model';
 import { auth } from '../middleware/auth.middleware';
 import asyncHandler from 'express-async-handler';
-import axios from 'axios';
 
 const router = express.Router();
 
@@ -159,112 +158,6 @@ router.post(
     await user.save();
 
     res.json({ message: 'Password has been reset successfully' });
-  })
-);
-
-// Google Login
-router.post(
-  '/google-login',
-  asyncHandler(async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    const { token } = req.body;
-
-    try {
-      const response = await axios.get(`https://www.googleapis.com/oauth2/v3/userinfo?access_token=${token}`);
-      const { email, name } = response.data;
-
-      let user = await User.findOne({ email });
-      if (!user) {
-        // Create new user if not exists
-        user = new User({ username: name, email, password: Math.random().toString(36).slice(-8) }); // Placeholder password
-        await user.save();
-      }
-
-      const jwtToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET as string, { expiresIn: '1h' });
-      res.status(200).json({
-        token: jwtToken,
-        user: {
-          id: user._id,
-          username: user.username,
-          email: user.email,
-        },
-      });
-    } catch (error: any) {
-      console.error('Google login error:', error.message);
-      res.status(400).json({ message: 'Google login failed' });
-    }
-  })
-);
-
-// GitHub Login
-router.post(
-  '/github-login',
-  asyncHandler(async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    const { code } = req.body;
-
-    try {
-      const clientId = process.env.GITHUB_CLIENT_ID;
-      const clientSecret = process.env.GITHUB_CLIENT_SECRET;
-
-      const tokenResponse = await axios.post(
-        'https://github.com/login/oauth/access_token',
-        {
-          client_id: clientId,
-          client_secret: clientSecret,
-          code,
-        },
-        {
-          headers: { Accept: 'application/json' },
-        }
-      );
-
-      const accessToken = tokenResponse.data.access_token;
-
-      const userResponse = await axios.get('https://api.github.com/user', {
-        headers: {
-          Authorization: `token ${accessToken}`,
-        },
-      });
-      const { login: githubUsername, email: githubEmail, id: githubId } = userResponse.data;
-
-      // Get email from another endpoint if not directly available
-      let email = githubEmail;
-      if (!email) {
-        const emailsResponse = await axios.get('https://api.github.com/user/emails', {
-          headers: {
-            Authorization: `token ${accessToken}`,
-          },
-        });
-        const primaryEmail = emailsResponse.data.find((e: any) => e.primary && e.verified);
-        if (primaryEmail) {
-          email = primaryEmail.email;
-        }
-      }
-
-      if (!email) {
-        res.status(400).json({ message: 'Could not retrieve email from GitHub' });
-        return;
-      }
-
-      let user = await User.findOne({ email });
-      if (!user) {
-        // Create new user if not exists
-        user = new User({ username: githubUsername, email, password: Math.random().toString(36).slice(-8) }); // Placeholder password
-        await user.save();
-      }
-
-      const jwtToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET as string, { expiresIn: '1h' });
-      res.status(200).json({
-        token: jwtToken,
-        user: {
-          id: user._id,
-          username: user.username,
-          email: user.email,
-        },
-      });
-    } catch (error: any) {
-      console.error('GitHub login error:', error.message);
-      res.status(400).json({ message: 'GitHub login failed' });
-    }
   })
 );
 
