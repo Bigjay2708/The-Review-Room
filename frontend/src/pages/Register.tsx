@@ -74,7 +74,7 @@ const Register: React.FC = () => {
 
     try {
       await register(formData.username, formData.email, formData.password);
-      navigate('/login');
+      navigate('/movies');
     } catch (err) {
       // Error is handled by useAuth hook
     }
@@ -190,4 +190,4 @@ const Register: React.FC = () => {
   );
 };
 
-export default Register; 
+export default Register;
