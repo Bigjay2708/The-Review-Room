@@ -14,6 +14,13 @@ export interface Movie {
   vote_average: number;
   vote_count: number;
   genres?: Array<{ id: number; name: string }>;
+  runtime: number;
+  tagline: string;
+}
+
+export interface Genre {
+  id: number;
+  name: string;
 }
 
 export interface Review {
@@ -36,4 +43,15 @@ export interface ReviewFormData {
 export interface UpdateReviewData {
   rating?: number;
   comment?: string;
+}
+
+export interface User {
+  id: string;
+  username: string;
+  email: string;
+}
+
+export interface AuthResponse {
+  token: string;
+  user: User;
 }

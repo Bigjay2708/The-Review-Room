@@ -7,6 +7,7 @@ import helmet from 'helmet';
 import compression from 'compression';
 import { movieRoutes } from './routes/movie.routes';
 import { reviewRoutes } from './routes/review.routes';
+import { userRoutes } from './routes/user.routes';
 import logger from './utils/logger';
 import { errorHandler } from './middleware/error.middleware';
 
@@ -18,11 +19,9 @@ process.on('uncaughtException', (err) => {
 
 logger.info('--- BACKEND INDEX.TS INITIALIZING ---');
 
-dotenv.config({ path: path.resolve(__dirname, '..', '.env') });
+dotenv.config({ path: path.join(__dirname, '..', '.env') });
 
-logger.info('TMDB_API_KEY from process.env:', process.env.TMDB_API_KEY);
-logger.info('JWT_SECRET from process.env:', process.env.JWT_SECRET);
-logger.info('MONGODB_URI from process.env:', process.env.MONGODB_URI);
+logger.info('Full process.env:', process.env);
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -35,6 +34,8 @@ const corsOptions = {
   optionsSuccessStatus: 204
 };
 
+logger.info('CORS_ORIGIN configured to:', corsOptions.origin);
+
 // Middleware
 app.use(helmet());
 app.use(compression());
@@ -45,6 +46,7 @@ app.use(express.json());
 // Routes
 app.use('/api/movies', movieRoutes);
 app.use('/api/reviews', reviewRoutes);
+app.use('/api/users', userRoutes);
 
 // Health check endpoint
 app.get('/health', (req, res) => {

@@ -37,7 +37,7 @@ const MovieList: React.FC = () => {
       setMovieList(response);
       setTotalPages(response.length > 0 ? 500 : 1); // Placeholder, adjust based on actual API response
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to fetch popular movies');
+      setError(err.response?.data?.message || err.message || 'Failed to fetch popular movies');
     } finally {
       setLoading(false);
     }
@@ -57,7 +57,7 @@ const MovieList: React.FC = () => {
       setTotalPages(response.length > 0 ? 500 : 1); // Placeholder
       setPage(1);
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to search movies');
+      setError(err.response?.data?.message || err.message || 'Failed to search movies');
     } finally {
       setLoading(false);
     }

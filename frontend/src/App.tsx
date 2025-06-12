@@ -5,6 +5,13 @@ import { createTheme } from '@mui/material/styles';
 import Navigation from './components/Navigation';
 import MovieList from './pages/MovieList';
 import MovieDetails from './pages/MovieDetails';
+import Register from './pages/Register';
+import Login from './pages/Login';
+import ProtectedRoute from './components/ProtectedRoute';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
+import { AuthProvider } from './hooks/useAuth';
+import GithubCallback from './pages/GithubCallback';
 
 const theme = createTheme({
   palette: {
@@ -38,16 +45,25 @@ const App: React.FC = () => {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <Router>
-        <Navigation />
-        <Container sx={{ mt: 4, mb: 4 }}>
-          <Routes>
-            <Route path="/" element={<Navigate to="/movies" replace />} />
-            <Route path="/movies" element={<MovieList />} />
-            <Route path="/movies/:id" element={<MovieDetails />} />
-          </Routes>
-        </Container>
-      </Router>
+      <AuthProvider>
+        <Router>
+          <Navigation />
+          <Container sx={{ mt: 4, mb: 4 }}>
+            <Routes>
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
+              <Route path="/auth/github/callback" element={<GithubCallback />} />
+              <Route path="/" element={<Navigate to="/movies" replace />} />
+              <Route element={<ProtectedRoute />}>
+                <Route path="/movies" element={<MovieList />} />
+                <Route path="/movies/:id" element={<MovieDetails />} />
+              </Route>
+            </Routes>
+          </Container>
+        </Router>
+      </AuthProvider>
     </ThemeProvider>
   );
 };

@@ -16,11 +16,13 @@ import {
   Menu as MenuIcon,
   Movie as MovieIcon,
 } from '@mui/icons-material';
+import { useAuth } from '../hooks/useAuth';
 
 const Navigation: React.FC = () => {
   const navigate = useNavigate();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const { user, logout } = useAuth();
 
   const [mobileMenuAnchor, setMobileMenuAnchor] = useState<null | HTMLElement>(null);
 
@@ -37,6 +39,12 @@ const Navigation: React.FC = () => {
     navigate('/movies');
   };
 
+  const handleLogout = () => {
+    logout();
+    handleMenuClose();
+    navigate('/login'); // Redirect to login page after logout
+  };
+
   const renderMobileMenu = (
     <Menu
       anchorEl={mobileMenuAnchor}
@@ -47,6 +55,14 @@ const Navigation: React.FC = () => {
         <MovieIcon sx={{ mr: 1 }} />
         Movies
       </MenuItem>
+      {!user ? (
+        <>
+          <MenuItem onClick={() => { handleMenuClose(); navigate('/login'); }}>Login</MenuItem>
+          <MenuItem onClick={() => { handleMenuClose(); navigate('/register'); }}>Register</MenuItem>
+        </>
+      ) : (
+        <MenuItem onClick={handleLogout}>Logout</MenuItem>
+      )}
     </Menu>
   );
 
@@ -90,6 +106,20 @@ const Navigation: React.FC = () => {
             >
               Movies
             </Button>
+            {!user ? (
+              <>
+                <Button color="inherit" component={RouterLink} to="/login">
+                  Login
+                </Button>
+                <Button color="inherit" component={RouterLink} to="/register">
+                  Register
+                </Button>
+              </>
+            ) : (
+              <Button color="inherit" onClick={handleLogout}>
+                Logout
+              </Button>
+            )}
           </Box>
         )}
       </Toolbar>

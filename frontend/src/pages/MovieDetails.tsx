@@ -25,8 +25,8 @@ const MovieDetails: React.FC = () => {
       try {
         const movieDetails = await fetchMovieDetails(parseInt(id));
         setMovie(movieDetails);
-      } catch (err) {
-        setError('Failed to fetch movie details');
+      } catch (err: any) {
+        setError(err.response?.data?.message || err.message || 'Failed to fetch movie details');
         console.error(err);
       } finally {
         setLoading(false);
