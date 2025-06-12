@@ -99,6 +99,8 @@ const Register: React.FC = () => {
           required
           error={!!formErrors.username}
           helperText={formErrors.username}
+          autoComplete="off"
+          key="username-input"
         />
 
         <TextField
@@ -112,6 +114,8 @@ const Register: React.FC = () => {
           required
           error={!!formErrors.email}
           helperText={formErrors.email}
+          autoComplete="off"
+          key="email-input"
         />
 
         <TextField
@@ -125,6 +129,8 @@ const Register: React.FC = () => {
           required
           error={!!formErrors.password}
           helperText={formErrors.password}
+          autoComplete="new-password"
+          key="password-input"
           InputProps={{
             endAdornment: (
               <InputAdornment position="end">
@@ -151,6 +157,8 @@ const Register: React.FC = () => {
           required
           error={!!formErrors.confirmPassword}
           helperText={formErrors.confirmPassword}
+          autoComplete="new-password"
+          key="confirm-password-input"
         />
 
         <Button

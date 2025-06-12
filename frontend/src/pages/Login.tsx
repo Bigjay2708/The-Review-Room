@@ -111,6 +111,8 @@ const Login: React.FC = () => {
           onChange={handleChange}
           margin="normal"
           required
+          autoComplete="off"
+          key="login-email-input"
         />
 
         <TextField
@@ -122,6 +124,8 @@ const Login: React.FC = () => {
           onChange={handleChange}
           margin="normal"
           required
+          autoComplete="current-password"
+          key="login-password-input"
           InputProps={{
             endAdornment: (
               <InputAdornment position="end">
