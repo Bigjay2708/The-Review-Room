@@ -63,6 +63,12 @@ app.use(cors(corsOptions));
 app.options('*', cors(corsOptions)); // Handle preflight requests for all routes
 app.use(express.json());
 
+// Add a test route at the very top to check CORS and deployment
+app.get('/ping', (req, res) => {
+  logger.info('Ping route hit');
+  res.json({ message: 'pong', time: new Date().toISOString() });
+});
+
 // Routes
 app.use('/api/movies', movieRoutes);
 app.use('/api/reviews', reviewRoutes);
@@ -98,3 +104,9 @@ mongoose
     // For a non-operational error like this, we should still exit the process
     process.exit(1);
   });
+
+// Add a catch-all error handler at the end to log errors
+app.use((err, req, res, next) => {
+  logger.error('Global error handler:', err);
+  res.status(500).json({ message: 'Internal server error', error: err.message });
+});
