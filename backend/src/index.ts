@@ -37,13 +37,16 @@ const corsOptions: CorsOptions = {
     origin: string | undefined,
     callback: (err: Error | null, allow?: boolean) => void
   ) {
-    // allow requests with no origin (like mobile apps, curl, etc.)
-    if (!origin) return callback(null, true);
-    if (allowedOrigins.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
+    logger.info('CORS check for origin:', origin); // Log the origin for debugging
+    // TEMP: Allow all origins for debugging
+    callback(null, true);
+    // Uncomment below for strict origin checking
+    // if (!origin) return callback(null, true);
+    // if (allowedOrigins.indexOf(origin) !== -1) {
+    //   callback(null, true);
+    // } else {
+    //   callback(new Error('Not allowed by CORS'));
+    // }
   },
   methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
   credentials: true,
