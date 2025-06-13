@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import mongoose from 'mongoose';
 import cors, { CorsOptions } from 'cors';
 import dotenv from 'dotenv';
@@ -64,7 +64,7 @@ app.options('*', cors(corsOptions)); // Handle preflight requests for all routes
 app.use(express.json());
 
 // Add a test route at the very top to check CORS and deployment
-app.get('/ping', (req, res) => {
+app.get('/ping', (req: Request, res: Response) => {
   logger.info('Ping route hit');
   res.json({ message: 'pong', time: new Date().toISOString() });
 });
@@ -106,7 +106,7 @@ mongoose
   });
 
 // Add a catch-all error handler at the end to log errors
-app.use((err, req, res, next) => {
+app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
   logger.error('Global error handler:', err);
   res.status(500).json({ message: 'Internal server error', error: err.message });
 });
