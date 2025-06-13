@@ -1,6 +1,6 @@
 import express from 'express';
 import mongoose from 'mongoose';
-import cors from 'cors';
+import cors, { CorsOptions } from 'cors';
 import dotenv from 'dotenv';
 import path from 'path';
 import helmet from 'helmet';
@@ -31,8 +31,12 @@ const allowedOrigins = [
   'http://localhost:3000',
   'https://the-review-room-frontend-6led.onrender.com'
 ];
-const corsOptions = {
-  origin: function (origin, callback) {
+
+const corsOptions: CorsOptions = {
+  origin: function (
+    origin: string | undefined,
+    callback: (err: Error | null, allow?: boolean) => void
+  ) {
     // allow requests with no origin (like mobile apps, curl, etc.)
     if (!origin) return callback(null, true);
     if (allowedOrigins.indexOf(origin) !== -1) {
