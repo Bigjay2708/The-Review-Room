@@ -57,6 +57,7 @@ app.use(helmet());
 app.use(compression());
 
 app.use(cors(corsOptions));
+app.options('*', cors(corsOptions)); // Handle preflight requests for all routes
 app.use(express.json());
 
 // Routes
