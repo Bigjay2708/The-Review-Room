@@ -27,14 +27,26 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Configure CORS options
+const allowedOrigins = [
+  'http://localhost:3000',
+  'https://the-review-room-frontend-6led.onrender.com'
+];
 const corsOptions = {
-  origin: process.env.CORS_ORIGIN || 'http://localhost:3000', // Allow only your frontend origin
+  origin: function (origin, callback) {
+    // allow requests with no origin (like mobile apps, curl, etc.)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
   credentials: true,
   optionsSuccessStatus: 204
 };
 
-logger.info('CORS_ORIGIN configured to:', corsOptions.origin);
+logger.info('CORS_ORIGIN configured to:', allowedOrigins);
 
 // Middleware
 app.use(helmet());
