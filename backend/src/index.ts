@@ -83,27 +83,36 @@ app.get('/health', (req, res) => {
 app.use(errorHandler);
 
 // Connect to MongoDB
-mongoose
-  .connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/review-room')
-  .then(() => {
-    logger.info('Connected to MongoDB');
-    const server = app.listen(PORT, () => {
-      logger.info(`Server is running on port ${PORT}`);
-    });
-
-    // Handle unhandled promise rejections
-    process.on('unhandledRejection', (reason: Error | any) => {
-      logger.error('UNHANDLED REJECTION! 💥 Shutting down...', reason);
-      server.close(() => {
-        process.exit(1); // Exit with a failure code after server closes
+try {
+  mongoose
+    .connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/review-room')
+    .then(() => {
+      console.log('Connected to MongoDB');
+      logger.info('Connected to MongoDB');
+      const server = app.listen(PORT, () => {
+        console.log(`Server is running on port ${PORT}`);
+        logger.info(`Server is running on port ${PORT}`);
       });
+
+      // Handle unhandled promise rejections
+      process.on('unhandledRejection', (reason: Error | any) => {
+        console.log('UNHANDLED REJECTION! 💥 Shutting down...', reason);
+        logger.error('UNHANDLED REJECTION! 💥 Shutting down...', reason);
+        server.close(() => {
+          process.exit(1); // Exit with a failure code after server closes
+        });
+      });
+    })
+    .catch((error) => {
+      console.log('MongoDB connection error:', error);
+      logger.error('MongoDB connection error:', error);
+      process.exit(1);
     });
-  })
-  .catch((error) => {
-    logger.error('MongoDB connection error:', error);
-    // For a non-operational error like this, we should still exit the process
-    process.exit(1);
-  });
+} catch (err) {
+  console.log('Startup error:', err);
+  logger.error('Startup error:', err);
+  process.exit(1);
+}
 
 // Comment out the global error handler for now
 // app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
