@@ -63,9 +63,9 @@ app.use(cors(corsOptions));
 app.options('*', cors(corsOptions)); // Handle preflight requests for all routes
 app.use(express.json());
 
-// Add a test route at the very top to check CORS and deployment
+// Add a test route at the absolute top to check if any middleware is causing issues
 app.get('/ping', (req: Request, res: Response) => {
-  logger.info('Ping route hit');
+  console.log('Ping route hit'); // Use console.log to bypass logger
   res.json({ message: 'pong', time: new Date().toISOString() });
 });
 
@@ -105,8 +105,8 @@ mongoose
     process.exit(1);
   });
 
-// Add a catch-all error handler at the end to log errors
-app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
-  logger.error('Global error handler:', err);
-  res.status(500).json({ message: 'Internal server error', error: err.message });
-});
+// Comment out the global error handler for now
+// app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
+//   logger.error('Global error handler:', err);
+//   res.status(500).json({ message: 'Internal server error', error: err.message });
+// });
