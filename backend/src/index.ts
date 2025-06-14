@@ -47,7 +47,7 @@ const corsOptions: CorsOptions = {
 app.use(helmet());
 app.use(compression());
 app.use(cors(corsOptions));
-app.options('*', cors(corsOptions)); // Handle preflight requests for all routes
+app.options('*', cors(corsOptions)); // Explicitly handle all OPTIONS preflight requests
 app.use(express.json());
 
 // Test route
