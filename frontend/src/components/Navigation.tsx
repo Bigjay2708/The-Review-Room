@@ -116,9 +116,14 @@ const Navigation: React.FC = () => {
                 </Button>
               </>
             ) : (
-              <Button color="inherit" onClick={handleLogout}>
-                Logout
-              </Button>
+              <>
+                <Button color="inherit" component={RouterLink} to="/profile">
+                  Profile
+                </Button>
+                <Button color="inherit" onClick={handleLogout}>
+                  Logout
+                </Button>
+              </>
             )}
           </Box>
         )}
@@ -127,4 +132,4 @@ const Navigation: React.FC = () => {
   );
 };
 
-export default Navigation; 
+export default Navigation;

@@ -59,6 +59,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const logout = useCallback(() => {
+    // Optionally send user data to backend here before logout
     setUser(null);
     localStorage.removeItem('token');
     sessionStorage.removeItem('token');
@@ -83,4 +84,4 @@ export const useAuth = () => {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
-}; 
+};

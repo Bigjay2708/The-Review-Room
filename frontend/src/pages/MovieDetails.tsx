@@ -10,12 +10,17 @@ import {
 } from '@mui/material';
 import { fetchMovieDetails } from '../services/api';
 import { Movie } from '../types';
+import ReviewForm from '../components/ReviewForm';
+import { fetchReviews, submitReview } from '../services/reviewApi';
+import { Review, ReviewFormData } from '../types';
 
 const MovieDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const [movie, setMovie] = useState<Movie | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [reviewLoading, setReviewLoading] = useState(false);
 
   useEffect(() => {
     const getDetails = async () => {
@@ -25,16 +30,26 @@ const MovieDetails: React.FC = () => {
       try {
         const movieDetails = await fetchMovieDetails(parseInt(id));
         setMovie(movieDetails);
+        setReviewLoading(true);
+        const reviews = await fetchReviews(parseInt(id));
+        setReviews(reviews);
       } catch (err: any) {
         setError(err.response?.data?.message || err.message || 'Failed to fetch movie details');
         console.error(err);
       } finally {
         setLoading(false);
+        setReviewLoading(false);
       }
     };
 
     getDetails();
   }, [id]);
+
+  const handleReviewSubmit = async (review: ReviewFormData) => {
+    await submitReview(review);
+    const updatedReviews = await fetchReviews(Number(id));
+    setReviews(updatedReviews);
+  };
 
   if (loading) {
     return (
@@ -88,16 +103,35 @@ const MovieDetails: React.FC = () => {
               <Chip key={genre.id} label={genre.name} sx={{ mr: 1, mb: 1 }} />
             ))}
           </Box>
-          <Typography variant="body2" color="text.secondary">
-            Release Date: {movie.release_date}
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            Runtime: {movie.runtime} minutes
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            Rating: {movie.vote_average?.toFixed(1)} / 10
-          </Typography>
+          <Typography variant="body2" color="text.secondary">Original Title: {movie.original_title}</Typography>
+          <Typography variant="body2" color="text.secondary">Original Language: {movie.original_language}</Typography>
+          <Typography variant="body2" color="text.secondary">Release Date: {movie.release_date}</Typography>
+          <Typography variant="body2" color="text.secondary">Runtime: {movie.runtime} minutes</Typography>
+          <Typography variant="body2" color="text.secondary">Popularity: {movie.popularity}</Typography>
+          <Typography variant="body2" color="text.secondary">Vote Average: {movie.vote_average?.toFixed(1)} / 10</Typography>
+          <Typography variant="body2" color="text.secondary">Vote Count: {movie.vote_count}</Typography>
+          <Typography variant="body2" color="text.secondary">Adult: {movie.adult ? 'Yes' : 'No'}</Typography>
+          <Typography variant="body2" color="text.secondary">Video: {movie.video ? 'Yes' : 'No'}</Typography>
         </Box>
+      </Box>
+      <Box sx={{ mt: 4 }}>
+        <ReviewForm movieId={movie.id} onReviewSubmit={handleReviewSubmit} />
+        <Typography variant="h6" sx={{ mt: 4, mb: 2 }}>Reviews</Typography>
+        {reviewLoading ? (
+          <CircularProgress />
+        ) : (
+          reviews.length === 0 ? (
+            <Typography>No reviews yet. Be the first to review!</Typography>
+          ) : (
+            reviews.map((review) => (
+              <Box key={review._id} sx={{ mb: 2, p: 2, border: '1px solid #333', borderRadius: 2 }}>
+                <Typography variant="subtitle2">{review.username} - {new Date(review.createdAt).toLocaleString()}</Typography>
+                <Typography variant="body2">Rating: {review.rating} / 5</Typography>
+                <Typography variant="body1">{review.comment}</Typography>
+              </Box>
+            ))
+          )
+        )}
       </Box>
     </Container>
   );

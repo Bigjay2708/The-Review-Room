@@ -28,6 +28,7 @@ const MovieList: React.FC = () => {
 
   useEffect(() => {
     fetchMovies();
+    // eslint-disable-next-line
   }, [page]);
 
   const fetchMovies = async () => {
@@ -49,7 +50,6 @@ const MovieList: React.FC = () => {
       fetchMovies();
       return;
     }
-
     try {
       setLoading(true);
       const response = await searchMovies(searchQuery, 1);

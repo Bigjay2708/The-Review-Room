@@ -47,14 +47,21 @@ router.get('/popular', asyncHandler(async (req: Request, res: Response) => {
   }
 }));
 
-// Search movies
+// Search movies with advanced filters
 router.get('/search', asyncHandler(async (req: Request, res: Response) => {
-  const { query, page = 1 } = req.query;
-  const tmdbApiKey = getTmdbApiKey(); // Get and validate key here
-  const response = await axios.get(
-    TMDB_BASE_URL + '/search/movie?api_key=' + tmdbApiKey + '&query=' + query + '&page=' + page
-  );
-  res.json(response.data);
+  const { query, page = 1, genre, year, minRating, maxRating, language, sortBy } = req.query;
+  const tmdbApiKey = getTmdbApiKey();
+  let url = TMDB_BASE_URL + '/search/movie?api_key=' + tmdbApiKey + '&query=' + query + '&page=' + page;
+  if (genre) url += `&with_genres=${genre}`;
+  if (year) url += `&year=${year}`;
+  if (language) url += `&language=${language}`;
+  if (sortBy) url += `&sort_by=${sortBy}`;
+  // Note: TMDB does not support min/max rating directly in search, but you can filter results after fetching
+  const response = await axios.get(url);
+  let results = response.data.results;
+  if (minRating) results = results.filter((m: any) => m.vote_average >= Number(minRating));
+  if (maxRating) results = results.filter((m: any) => m.vote_average <= Number(maxRating));
+  res.json({ ...response.data, results });
 }));
 
 // Get movie details
@@ -78,4 +85,4 @@ router.get('/:id/trailer', asyncHandler(async (req: Request, res: Response) => {
   res.json({ key: trailer?.key });
 }));
 
-export const movieRoutes = router; 
+export const movieRoutes = router;

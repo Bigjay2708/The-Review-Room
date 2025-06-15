@@ -19,10 +19,30 @@ export const fetchPopularMovies = async (page: number): Promise<Movie[]> => {
   }
 };
 
-export const searchMovies = async (query: string, page: number): Promise<Movie[]> => {
+export const searchMovies = async (
+  query: string,
+  page: number,
+  filters?: {
+    genre?: string;
+    year?: string;
+    minRating?: string;
+    maxRating?: string;
+    language?: string;
+    sortBy?: string;
+  }
+): Promise<Movie[]> => {
   try {
+    const params: any = { query, page };
+    if (filters) {
+      if (filters.genre) params.genre = filters.genre;
+      if (filters.year) params.year = filters.year;
+      if (filters.minRating) params.minRating = filters.minRating;
+      if (filters.maxRating) params.maxRating = filters.maxRating;
+      if (filters.language) params.language = filters.language;
+      if (filters.sortBy) params.sortBy = filters.sortBy;
+    }
     const response = await axios.get(`${API_BASE_URL}/movies/search`, {
-      params: { query, page },
+      params,
     });
     return response.data.results;
   } catch (error) {
@@ -77,6 +97,13 @@ export const getUserProfile = async (token: string): Promise<User> => {
   }
 };
 
+export const updateUserProfile = async (token: string, data: { username: string; email: string }) => {
+  const response = await axios.put(`${API_BASE_URL}/users/profile`, data, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return response.data;
+};
+
 // --- Password Reset API Calls ---
 export const requestPasswordReset = async (email: string): Promise<void> => {
   try {
@@ -120,4 +147,4 @@ export default axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-}); 
+});
