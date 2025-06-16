@@ -9,10 +9,10 @@ const tmdbApiKey = process.env.REACT_APP_TMDB_API_KEY;
 
 export const fetchPopularMovies = async (page: number): Promise<Movie[]> => {
   try {
-    const response = await axios.get(`${API_BASE_URL}/movies/popular`, {
+    const response = await axios.get<{ results: Movie[] }>(`${API_BASE_URL}/movies/popular`, {
       params: { page },
     });
-    return response.data.results;
+    return (response.data as { results: Movie[] }).results;
   } catch (error) {
     console.error('Error fetching popular movies:', error);
     throw error;
@@ -41,10 +41,10 @@ export const searchMovies = async (
       if (filters.language) params.language = filters.language;
       if (filters.sortBy) params.sortBy = filters.sortBy;
     }
-    const response = await axios.get(`${API_BASE_URL}/movies/search`, {
+    const response = await axios.get<{ results: Movie[] }>(`${API_BASE_URL}/movies/search`, {
       params,
     });
-    return response.data.results;
+    return (response.data as { results: Movie[] }).results;
   } catch (error) {
     console.error('Error searching movies:', error);
     throw error;
@@ -53,8 +53,8 @@ export const searchMovies = async (
 
 export const fetchMovieDetails = async (id: number): Promise<Movie> => {
   try {
-    const response = await axios.get(`${API_BASE_URL}/movies/${id}`);
-    return response.data;
+    const response = await axios.get<Movie>(`${API_BASE_URL}/movies/${id}`);
+    return response.data as Movie;
   } catch (error) {
     console.error(`Error fetching movie details for ${id}:`, error);
     throw error;
@@ -65,8 +65,8 @@ export const fetchMovieDetails = async (id: number): Promise<Movie> => {
 
 export const registerUser = async (username: string, email: string, password: string): Promise<AuthResponse> => {
   try {
-    const response = await axios.post(`${API_BASE_URL}/users/register`, { username, email, password });
-    return response.data;
+    const response = await axios.post<AuthResponse>(`${API_BASE_URL}/users/register`, { username, email, password });
+    return response.data as AuthResponse;
   } catch (error) {
     console.error('Registration error:', error);
     throw error;
@@ -75,8 +75,8 @@ export const registerUser = async (username: string, email: string, password: st
 
 export const loginUser = async (email: string, password: string): Promise<AuthResponse> => {
   try {
-    const response = await axios.post(`${API_BASE_URL}/users/login`, { email, password });
-    return response.data;
+    const response = await axios.post<AuthResponse>(`${API_BASE_URL}/users/login`, { email, password });
+    return response.data as AuthResponse;
   } catch (error) {
     console.error('Login error:', error);
     throw error;
@@ -85,12 +85,12 @@ export const loginUser = async (email: string, password: string): Promise<AuthRe
 
 export const getUserProfile = async (token: string): Promise<User> => {
   try {
-    const response = await axios.get(`${API_BASE_URL}/users/profile`, {
+    const response = await axios.get<User>(`${API_BASE_URL}/users/profile`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
     });
-    return response.data;
+    return response.data as User;
   } catch (error) {
     console.error('Get user profile error:', error);
     throw error;
@@ -98,10 +98,10 @@ export const getUserProfile = async (token: string): Promise<User> => {
 };
 
 export const updateUserProfile = async (token: string, data: { username: string; email: string }) => {
-  const response = await axios.put(`${API_BASE_URL}/users/profile`, data, {
+  const response = await axios.put<User>(`${API_BASE_URL}/users/profile`, data, {
     headers: { Authorization: `Bearer ${token}` },
   });
-  return response.data;
+  return response.data as User;
 };
 
 // --- Password Reset API Calls ---

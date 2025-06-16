@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Container,
-  Grid,
   Card,
   CardContent,
   CardMedia,
@@ -16,6 +15,7 @@ import {
 import { Search as SearchIcon } from '@mui/icons-material';
 import { fetchPopularMovies, searchMovies } from '../services/api';
 import { Movie } from '../types';
+import Grid from '@mui/material/Grid';
 
 const MovieList: React.FC = () => {
   const navigate = useNavigate();
@@ -104,7 +104,7 @@ const MovieList: React.FC = () => {
 
       <Grid container spacing={3}>
         {movieList.map((movie) => (
-          <Grid item xs={12} sm={6} md={4} lg={3} key={movie.id}>
+          <Grid key={movie.id} style={{ flexBasis: '25%', maxWidth: '25%' }}>
             <Card
               sx={{
                 height: '100%',

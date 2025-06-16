@@ -1,9 +1,8 @@
-import express, { Request, Response, NextFunction } from 'express';
 import { check, validationResult } from 'express-validator';
 import jwt from 'jsonwebtoken';
-import { User } from '../models/user.model';
+import { User, IUser } from '../models/user.model';
 import { auth } from '../middleware/auth.middleware';
-import asyncHandler from 'express-async-handler';
+import express, { Request, Response } from 'express';
 
 const router = express.Router();
 
@@ -15,7 +14,7 @@ router.post(
     check('email', 'Please include a valid email').isEmail(),
     check('password', 'Please enter a password with 6 or more characters').isLength({ min: 6 }),
   ],
-  asyncHandler(async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  async (req: Request, res: Response): Promise<void> => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       res.status(400).json({ errors: errors.array() });
@@ -43,7 +42,7 @@ router.post(
         email: user.email,
       },
     });
-  })
+  }
 );
 
 // Login user
@@ -53,7 +52,7 @@ router.post(
     check('email', 'Please include a valid email').isEmail(),
     check('password', 'Password is required').exists(),
   ],
-  asyncHandler(async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  async (req: Request, res: Response): Promise<void> => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       res.status(400).json({ errors: errors.array() });
@@ -83,14 +82,15 @@ router.post(
         email: user.email,
       },
     });
-  })
+  }
 );
 
 // Get user profile
-router.get('/profile', auth, asyncHandler(async (req: Request & { user?: any }, res: Response, next: NextFunction): Promise<void> => {
-  const user = await User.findById(req.user?._id).select('-password');
+// @ts-ignore
+router.get('/profile', auth, async (req: Request, res: Response) => {
+  const user = await User.findById((req as any).user?._id).select('-password');
   res.json(user);
-}));
+});
 
 // Request password reset
 router.post(
@@ -98,7 +98,7 @@ router.post(
   [
     check('email', 'Please include a valid email').isEmail(),
   ],
-  asyncHandler(async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  async (req: Request, res: Response): Promise<void> => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       res.status(400).json({ errors: errors.array() });
@@ -123,7 +123,7 @@ router.post(
     console.log(`Password reset token for ${user.email}: ${resetToken}`);
 
     res.json({ message: 'If a user with that email exists, a password reset link will be sent.' });
-  })
+  }
 );
 
 // Reset password
@@ -133,7 +133,7 @@ router.post(
     check('token', 'Token is required').not().isEmpty(),
     check('newPassword', 'Please enter a password with 6 or more characters').isLength({ min: 6 }),
   ],
-  asyncHandler(async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  async (req: Request, res: Response): Promise<void> => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       res.status(400).json({ errors: errors.array() });
@@ -158,7 +158,7 @@ router.post(
     await user.save();
 
     res.json({ message: 'Password has been reset successfully' });
-  })
+  }
 );
 
-export const userRoutes = router; 
+export const userRoutes = router;
