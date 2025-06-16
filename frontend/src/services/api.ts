@@ -1,11 +1,17 @@
 import axios from 'axios';
 import { Movie, User, AuthResponse } from '../types';
 
-const API_BASE_URL = process.env.NODE_ENV === 'production'
-  ? 'https://the-review-room.onrender.com/api'
-  : 'http://localhost:5000/api';
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000';
+const TMDB_API_KEY = process.env.REACT_APP_TMDB_API_KEY;
 
-const tmdbApiKey = process.env.REACT_APP_TMDB_API_KEY;
+const api = axios.create({
+  baseURL: API_BASE_URL,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+export { TMDB_API_KEY };
 
 export const fetchPopularMovies = async (page: number): Promise<Movie[]> => {
   try {
@@ -142,9 +148,4 @@ export const resendVerificationEmail = async (): Promise<void> => {
   }
 };
 
-export default axios.create({
-  baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
+export default api;
