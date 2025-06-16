@@ -18,7 +18,7 @@
     "@types/compression": "^1.8.1",
     "@types/cors": "^2.8.19",
     "@types/helmet": "^0.0.48",
-    "@types/jsonwebtoken": "^9.0.9",
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/mongoose": "^5.11.96",
     "@types/node": "^24.0.1",
     "@types/winston": "^2.4.4",
