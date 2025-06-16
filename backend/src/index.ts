@@ -27,16 +27,12 @@ const corsOptions: CorsOptions = {
     origin: string | undefined,
     callback: (err: Error | null, allow?: boolean) => void
   ) {
-    logger.info('CORS check for origin:', origin); // Log the origin for debugging
-    // TEMP: Allow all origins for debugging
-    callback(null, true);
-    // Uncomment below for strict origin checking
-    // if (!origin) return callback(null, true);
-    // if (allowedOrigins.indexOf(origin) !== -1) {
-    //   callback(null, true);
-    // } else {
-    //   callback(new Error('Not allowed by CORS'));
-    // }
+    if (!origin) return callback(null, true); // Allow non-browser requests
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
   },
   methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
   credentials: true,
