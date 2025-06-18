@@ -27,6 +27,7 @@ const corsOptions: CorsOptions = {
     origin: string | undefined,
     callback: (err: Error | null, allow?: boolean) => void
   ) {
+    console.log('CORS check:', { origin, allowedOrigins }); // Debug log
     if (!origin) return callback(null, true); // Allow non-browser requests
     if (allowedOrigins.includes(origin)) {
       callback(null, true);
