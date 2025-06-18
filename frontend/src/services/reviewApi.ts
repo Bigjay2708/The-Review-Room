@@ -1,9 +1,7 @@
 import axios from 'axios';
 import { Review, ReviewFormData } from '../types';
 
-const API_BASE_URL = process.env.NODE_ENV === 'production'
-  ? 'https://the-review-room.onrender.com/api'
-  : 'http://localhost:5000/api';
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || '/api';
 
 export const fetchReviews = async (movieId: number): Promise<Review[]> => {
   const response = await axios.get<Review[]>(`${API_BASE_URL}/reviews/movie/${movieId}`);

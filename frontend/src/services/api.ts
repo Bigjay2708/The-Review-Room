@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { Movie, User, AuthResponse } from '../types';
 
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000';
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || '/api';
 const TMDB_API_KEY = process.env.REACT_APP_TMDB_API_KEY;
 
 const api = axios.create({
