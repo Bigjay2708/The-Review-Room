@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import dbConnect from '../api/dbConnect';
-import { Movie } from '../backend/src/models/movie.model';
+import { Movie } from './models/movie.model';
 
 // Example: GET /api/movies
 export default async function handler(req: VercelRequest, res: VercelResponse) {
