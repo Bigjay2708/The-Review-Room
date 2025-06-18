@@ -17,10 +17,10 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Configure CORS options
-const allowedOrigins = [
-  'http://localhost:3000',
-  'https://the-review-room-frontend-6led.onrender.com'
-];
+const allowedOrigins = (process.env.CORS_ORIGIN || '')
+  .split(',')
+  .map(origin => origin.trim())
+  .filter(Boolean);
 
 const corsOptions: CorsOptions = {
   origin: function (
@@ -42,8 +42,8 @@ const corsOptions: CorsOptions = {
 // Middleware
 app.use(helmet());
 app.use(compression());
-app.use(cors()); // Allow all origins for debugging
-app.options('*', cors()); // Explicitly handle all OPTIONS preflight requests
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
 app.use(express.json());
 
 // Test route
