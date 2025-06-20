@@ -71,7 +71,7 @@ export const fetchMovieDetails = async (id: number): Promise<Movie> => {
 
 export const registerUser = async (username: string, email: string, password: string): Promise<AuthResponse> => {
   try {
-    const response = await axios.post<AuthResponse>(`${API_BASE_URL}/users/register`, { username, email, password });
+    const response = await axios.post<AuthResponse>(`${API_BASE_URL}/register`, { username, email, password });
     return response.data as AuthResponse;
   } catch (error) {
     console.error('Registration error:', error);
@@ -81,7 +81,7 @@ export const registerUser = async (username: string, email: string, password: st
 
 export const loginUser = async (email: string, password: string): Promise<AuthResponse> => {
   try {
-    const response = await axios.post<AuthResponse>(`${API_BASE_URL}/users/login`, { email, password });
+    const response = await axios.post<AuthResponse>(`${API_BASE_URL}/login`, { email, password });
     return response.data as AuthResponse;
   } catch (error) {
     console.error('Login error:', error);
