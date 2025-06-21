@@ -52,9 +52,9 @@ app.use(cors({
 }));
 
 // Import routes
-const usersRouter = require('./users/users.routes');
-const moviesRouter = require('./movies/movies.routes');
-const reviewsRouter = require('./reviews/reviews.routes');
+import usersRouter from './users/users.routes';
+import moviesRouter from './movies/movies.routes';
+import reviewsRouter from './reviews/reviews.routes';
 
 // Use routes with consistent API paths
 app.use('/api/users', usersRouter);

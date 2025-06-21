@@ -1,5 +1,9 @@
 // MongoDB connection utility for Vercel serverless functions
 import mongoose from 'mongoose';
+import dotenv from 'dotenv';
+
+// Load environment variables in case they haven't been loaded yet
+dotenv.config();
 
 const MONGODB_URI = process.env.MONGODB_URI;
 
@@ -27,11 +31,10 @@ async function dbConnect() {
   }
   
   if (!cached.promise) {
-    const opts = options;
-    
+    const opts = options;    
     mongoose.set('strictQuery', true);
     
-    cached.promise = mongoose.connect(MONGODB_URI, opts)
+    cached.promise = mongoose.connect(MONGODB_URI as string, opts)
       .then((mongoose) => {
         console.log('MongoDB connection established successfully');
         return mongoose;

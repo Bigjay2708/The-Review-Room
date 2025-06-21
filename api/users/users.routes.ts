@@ -1,13 +1,13 @@
 import express, { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
+import jwt, { SignOptions } from 'jsonwebtoken';
 import { User } from '../models/user.model';
 import { authMiddleware } from '../middleware/auth.middleware';
 
 const router = express.Router();
 
 // Input validation middleware
-const validateRegisterInput = (req: Request, res: Response, next: Function) => {
+const validateRegisterInput = (req: Request, res: Response, next: () => void) => {
   const { username, email, password } = req.body;
   const errors: { [key: string]: string } = {};
 
@@ -133,6 +133,10 @@ router.post('/login', async (req: Request, res: Response) => {
 // Get user profile - protected route
 router.get('/profile', authMiddleware, async (req: Request, res: Response) => {
   try {
+    if (!req.user) {
+      return res.status(401).json({ message: 'Authentication required' });
+    }
+    
     res.json({
       id: req.user._id,
       username: req.user.username,
@@ -149,6 +153,10 @@ router.get('/profile', authMiddleware, async (req: Request, res: Response) => {
 router.put('/profile', authMiddleware, async (req: Request, res: Response) => {
   try {
     const { username, email } = req.body;
+    
+    if (!req.user) {
+      return res.status(401).json({ message: 'Authentication required' });
+    }
     
     // Validate input
     if (username && username.trim().length < 3) {
@@ -260,4 +268,4 @@ router.post('/reset-password', async (req: Request, res: Response) => {
   }
 });
 
-export = router;
+export default router;

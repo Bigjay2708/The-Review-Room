@@ -39,6 +39,9 @@ router.post('/movie/:movieId', authMiddleware, async (req: Request, res: Respons
     if (!comment || comment.trim() === '') {
       return res.status(400).json({ message: 'Comment is required' });
     }
+      if (!req.user) {
+      return res.status(401).json({ message: 'Authentication required' });
+    }
     
     // Check if user already reviewed this movie
     const existingReview = await Review.findOne({ 
@@ -51,7 +54,10 @@ router.post('/movie/:movieId', authMiddleware, async (req: Request, res: Respons
         message: 'You have already reviewed this movie. You can update your existing review instead.' 
       });
     }
-    
+      if (!req.user) {
+      return res.status(401).json({ message: 'Authentication required' });
+    }
+
     // Create new review using authenticated user
     const review = new Review({
       movieId,
@@ -97,6 +103,9 @@ router.put('/:reviewId', authMiddleware, async (req: Request, res: Response) => 
     if (!review) {
       return res.status(404).json({ message: 'Review not found' });
     }
+      if (!req.user) {
+      return res.status(401).json({ message: 'Authentication required' });
+    }
     
     // Check if user is the review author
     if (review.userId.toString() !== req.user._id.toString()) {
@@ -139,6 +148,9 @@ router.delete('/:reviewId', authMiddleware, async (req: Request, res: Response) 
     if (!review) {
       return res.status(404).json({ message: 'Review not found' });
     }
+      if (!req.user) {
+      return res.status(401).json({ message: 'Authentication required' });
+    }
     
     // Check if user is the review author
     if (review.userId.toString() !== req.user._id.toString()) {
@@ -155,4 +167,4 @@ router.delete('/:reviewId', authMiddleware, async (req: Request, res: Response) 
   }
 });
 
-export = router;
+export default router;
