@@ -13,6 +13,7 @@ import ResetPassword from './pages/ResetPassword';
 import { AuthProvider } from './hooks/useAuth';
 import UserProfile from './pages/UserProfile';
 
+// Create a dark theme for the application
 const theme = createTheme({
   palette: {
     mode: 'dark',
@@ -51,14 +52,19 @@ const App: React.FC = () => {
           <div style={{ display: 'flex' }}>
             <Container sx={{ mt: 4, mb: 4, width: '100%' }}>
               <Routes>
+                {/* Public routes */}
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
                 <Route path="/forgot-password" element={<ForgotPassword />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="/" element={<Navigate to="/movies" replace />} />
+                <Route path="/movies" element={<MovieList />} />
+                
+                {/* Public movie details but with protected review features */}
+                <Route path="/movies/:id" element={<MovieDetails />} />
+                
+                {/* Protected routes */}
                 <Route element={<ProtectedRoute />}>
-                  <Route path="/movies" element={<MovieList />} />
-                  <Route path="/movies/:id" element={<MovieDetails />} />
                   <Route path="/profile" element={<UserProfile />} />
                 </Route>
               </Routes>

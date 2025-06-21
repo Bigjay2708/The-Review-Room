@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import {
   Container,
   Typography,
@@ -7,12 +7,15 @@ import {
   Box,
   CardMedia,
   Chip,
+  Button,
+  Alert,
 } from '@mui/material';
 import { fetchMovieDetails } from '../services/api';
 import { Movie } from '../types';
 import ReviewForm from '../components/ReviewForm';
 import { fetchReviews, submitReview } from '../services/reviewApi';
 import { Review, ReviewFormData } from '../types';
+import { useAuth } from '../hooks/useAuth';
 
 const MovieDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -21,6 +24,7 @@ const MovieDetails: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [reviewLoading, setReviewLoading] = useState(false);
+  const { user, isAuthenticated } = useAuth();
 
   useEffect(() => {
     const getDetails = async () => {
@@ -46,9 +50,14 @@ const MovieDetails: React.FC = () => {
   }, [id]);
 
   const handleReviewSubmit = async (review: ReviewFormData) => {
-    await submitReview(review);
-    const updatedReviews = await fetchReviews(Number(id));
-    setReviews(updatedReviews);
+    try {
+      await submitReview(review);
+      const updatedReviews = await fetchReviews(Number(id));
+      setReviews(updatedReviews);
+    } catch (err: any) {
+      console.error('Error submitting review:', err);
+      setError(err.response?.data?.message || 'Failed to submit review');
+    }
   };
 
   if (loading) {
@@ -115,7 +124,21 @@ const MovieDetails: React.FC = () => {
         </Box>
       </Box>
       <Box sx={{ mt: 4 }}>
-        <ReviewForm movieId={movie.id} onReviewSubmit={handleReviewSubmit} />
+        {isAuthenticated ? (
+          <ReviewForm movieId={movie.id} onReviewSubmit={handleReviewSubmit} />
+        ) : (
+          <Alert 
+            severity="info" 
+            sx={{ mb: 3 }}
+            action={
+              <Button color="inherit" size="small" component={Link} to="/login">
+                Sign In
+              </Button>
+            }
+          >
+            You need to be logged in to post a review.
+          </Alert>
+        )}
         <Typography variant="h6" sx={{ mt: 4, mb: 2 }}>Reviews</Typography>
         {reviewLoading ? (
           <CircularProgress />
@@ -136,5 +159,7 @@ const MovieDetails: React.FC = () => {
     </Container>
   );
 };
+
+export default MovieDetails;
 
 export default MovieDetails;

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link as RouterLink, useNavigate } from 'react-router-dom';
+import { Link as RouterLink, useNavigate, useLocation } from 'react-router-dom';
 import {
   AppBar,
   Toolbar,
@@ -11,27 +11,39 @@ import {
   Box,
   useMediaQuery,
   useTheme,
+  Badge,
+  Avatar,
+  Tooltip,
 } from '@mui/material';
 import {
   Menu as MenuIcon,
   Movie as MovieIcon,
+  Person as PersonIcon,
+  Home as HomeIcon,
 } from '@mui/icons-material';
 import { useAuth } from '../hooks/useAuth';
 
 const Navigation: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-  const { user, logout } = useAuth();
+  const { user, isAuthenticated, logout } = useAuth();
 
   const [mobileMenuAnchor, setMobileMenuAnchor] = useState<null | HTMLElement>(null);
+  const [userMenuAnchor, setUserMenuAnchor] = useState<null | HTMLElement>(null);
 
   const handleMobileMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
     setMobileMenuAnchor(event.currentTarget);
   };
 
+  const handleUserMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
+    setUserMenuAnchor(event.currentTarget);
+  };
+
   const handleMenuClose = () => {
     setMobileMenuAnchor(null);
+    setUserMenuAnchor(null);
   };
 
   const handleMovies = () => {
@@ -45,6 +57,10 @@ const Navigation: React.FC = () => {
     navigate('/login'); // Redirect to login page after logout
   };
 
+  const isActive = (path: string) => {
+    return location.pathname === path;
+  };
+
   const renderMobileMenu = (
     <Menu
       anchorEl={mobileMenuAnchor}
@@ -55,14 +71,50 @@ const Navigation: React.FC = () => {
         <MovieIcon sx={{ mr: 1 }} />
         Movies
       </MenuItem>
-      {!user ? (
+      
+      {!isAuthenticated ? (
         <>
-          <MenuItem onClick={() => { handleMenuClose(); navigate('/login'); }}>Login</MenuItem>
-          <MenuItem onClick={() => { handleMenuClose(); navigate('/register'); }}>Register</MenuItem>
+          <MenuItem onClick={() => { handleMenuClose(); navigate('/login'); }}>
+            Login
+          </MenuItem>
+          <MenuItem onClick={() => { handleMenuClose(); navigate('/register'); }}>
+            Register
+          </MenuItem>
         </>
       ) : (
-        <MenuItem onClick={handleLogout}>Logout</MenuItem>
+        <>
+          <MenuItem onClick={() => { handleMenuClose(); navigate('/profile'); }}>
+            <PersonIcon sx={{ mr: 1 }} />
+            Profile
+          </MenuItem>
+          <MenuItem onClick={handleLogout}>
+            Logout
+          </MenuItem>
+        </>
       )}
+    </Menu>
+  );
+
+  const renderUserMenu = (
+    <Menu
+      anchorEl={userMenuAnchor}
+      open={Boolean(userMenuAnchor)}
+      onClose={handleMenuClose}
+      anchorOrigin={{
+        vertical: 'bottom',
+        horizontal: 'right',
+      }}
+      transformOrigin={{
+        vertical: 'top',
+        horizontal: 'right',
+      }}
+    >
+      <MenuItem onClick={() => { handleMenuClose(); navigate('/profile'); }}>
+        Profile
+      </MenuItem>
+      <MenuItem onClick={handleLogout}>
+        Logout
+      </MenuItem>
     </Menu>
   );
 
@@ -81,6 +133,7 @@ const Navigation: React.FC = () => {
             alignItems: 'center',
           }}
         >
+          <MovieIcon sx={{ mr: 1 }} />
           The Review Room
         </Typography>
 
@@ -103,26 +156,45 @@ const Navigation: React.FC = () => {
               component={RouterLink}
               to="/movies"
               startIcon={<MovieIcon />}
+              sx={{ mx: 1, color: isActive('/movies') ? theme.palette.secondary.main : 'inherit' }}
             >
               Movies
             </Button>
-            {!user ? (
+            
+            {!isAuthenticated ? (
               <>
-                <Button color="inherit" component={RouterLink} to="/login">
+                <Button 
+                  color="inherit" 
+                  component={RouterLink} 
+                  to="/login"
+                  sx={{ mx: 1, color: isActive('/login') ? theme.palette.secondary.main : 'inherit' }}
+                >
                   Login
                 </Button>
-                <Button color="inherit" component={RouterLink} to="/register">
+                <Button 
+                  color="inherit" 
+                  component={RouterLink} 
+                  to="/register"
+                  sx={{ mx: 1, color: isActive('/register') ? theme.palette.secondary.main : 'inherit' }}
+                >
                   Register
                 </Button>
               </>
             ) : (
               <>
-                <Button color="inherit" component={RouterLink} to="/profile">
-                  Profile
-                </Button>
-                <Button color="inherit" onClick={handleLogout}>
-                  Logout
-                </Button>
+                <Tooltip title="Account settings">
+                  <IconButton 
+                    color="inherit" 
+                    onClick={handleUserMenuOpen}
+                    size="small"
+                    sx={{ ml: 2 }}
+                  >
+                    <Avatar sx={{ width: 32, height: 32, bgcolor: theme.palette.primary.dark }}>
+                      {user?.username.charAt(0).toUpperCase()}
+                    </Avatar>
+                  </IconButton>
+                </Tooltip>
+                {renderUserMenu}
               </>
             )}
           </Box>
@@ -131,5 +203,7 @@ const Navigation: React.FC = () => {
     </AppBar>
   );
 };
+
+export default Navigation;
 
 export default Navigation;

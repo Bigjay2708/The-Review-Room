@@ -1,5 +1,6 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
-import { loginUser, registerUser } from '../services/api';
+import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import { loginUser, registerUser, getUserProfile } from '../services/api';
+import jwt_decode from 'jwt-decode';
 
 interface User {
   id: string;
@@ -17,12 +18,57 @@ interface AuthContextType {
   logout: () => void;
 }
 
+interface JwtPayload {
+  userId: string;
+  exp: number;
+}
+
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Check for existing token and load user data on mount
+  useEffect(() => {
+    const initAuth = async () => {
+      try {
+        // Check for existing token
+        const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+        
+        if (token) {
+          // Verify token hasn't expired
+          try {
+            const decoded = jwt_decode<JwtPayload>(token);
+            const currentTime = Date.now() / 1000;
+            
+            if (decoded.exp < currentTime) {
+              // Token expired
+              localStorage.removeItem('token');
+              sessionStorage.removeItem('token');
+              setUser(null);
+            } else {
+              // Valid token, fetch user profile
+              const userData = await getUserProfile();
+              setUser(userData);
+            }
+          } catch (err) {
+            // Invalid token
+            localStorage.removeItem('token');
+            sessionStorage.removeItem('token');
+            setUser(null);
+          }
+        }
+      } catch (err) {
+        console.error('Auth initialization error:', err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    initAuth();
+  }, []);
 
   const login = useCallback(async (email: string, password: string, rememberMe = false) => {
     setIsLoading(true);
@@ -32,8 +78,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(response.user);
       if (rememberMe) {
         localStorage.setItem('token', response.token);
+        sessionStorage.removeItem('token');
       } else {
         sessionStorage.setItem('token', response.token);
+        localStorage.removeItem('token');
       }
     } catch (err: any) {
       setError(err.response?.data?.message || 'Login failed');
@@ -50,6 +98,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const response = await registerUser(username, email, password);
       setUser(response.user);
       sessionStorage.setItem('token', response.token);
+      localStorage.removeItem('token');
     } catch (err: any) {
       setError(err.response?.data?.message || 'Registration failed');
       throw err;
@@ -59,7 +108,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const logout = useCallback(() => {
-    // Optionally send user data to backend here before logout
     setUser(null);
     localStorage.removeItem('token');
     sessionStorage.removeItem('token');
