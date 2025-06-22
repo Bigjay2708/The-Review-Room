@@ -52,12 +52,12 @@ api.interceptors.response.use(
 
 // --- Movies API Calls ---
 
-export const fetchPopularMovies = async (page: number = 1): Promise<Movie[]> => {
+export const fetchPopularMovies = async (page: number = 1): Promise<{ results: Movie[]; total_pages: number; total_results: number; page: number }> => {
   try {
-    const response = await api.get<{ results: Movie[] }>(`/movies/popular`, {
+    const response = await api.get<{ results: Movie[]; total_results: number; page: number; total_pages: number }>(`/movies/popular`, {
       params: { page },
     });
-    return response.data.results;
+    return response.data;
   } catch (error) {
     console.error('Error fetching popular movies:', error);
     throw error;
@@ -75,7 +75,7 @@ export const searchMovies = async (
     language?: string;
     sortBy?: string;
   }
-): Promise<Movie[]> => {
+): Promise<{ results: Movie[]; total_pages: number; total_results: number; page: number }> => {
   try {
     const params: any = { query, page };
     if (filters) {
@@ -86,10 +86,10 @@ export const searchMovies = async (
       if (filters.language) params.language = filters.language;
       if (filters.sortBy) params.sortBy = filters.sortBy;
     }
-    const response = await api.get<{ results: Movie[] }>(`/movies/search`, {
+    const response = await api.get<{ results: Movie[]; total_results: number; page: number; total_pages: number }>(`/movies/search`, {
       params,
     });
-    return response.data.results;
+    return response.data;
   } catch (error) {
     console.error('Error searching movies:', error);
     throw error;
@@ -102,6 +102,72 @@ export const fetchMovieDetails = async (id: number): Promise<Movie> => {
     return response.data;
   } catch (error) {
     console.error(`Error fetching movie details for ${id}:`, error);
+    throw error;
+  }
+};
+
+// Add new API functions for different movie categories
+export const fetchTopRatedMovies = async (page: number = 1): Promise<{ results: Movie[]; total_pages: number; total_results: number; page: number }> => {
+  try {
+    const response = await api.get<{ results: Movie[]; total_results: number; page: number; total_pages: number }>(`/movies/top-rated`, {
+      params: { page },
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching top rated movies:', error);
+    throw error;
+  }
+};
+
+export const fetchNowPlayingMovies = async (page: number = 1): Promise<{ results: Movie[]; total_pages: number; total_results: number; page: number }> => {
+  try {
+    const response = await api.get<{ results: Movie[]; total_results: number; page: number; total_pages: number }>(`/movies/now-playing`, {
+      params: { page },
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching now playing movies:', error);
+    throw error;
+  }
+};
+
+export const fetchUpcomingMovies = async (page: number = 1): Promise<{ results: Movie[]; total_pages: number; total_results: number; page: number }> => {
+  try {
+    const response = await api.get<{ results: Movie[]; total_results: number; page: number; total_pages: number }>(`/movies/upcoming`, {
+      params: { page },
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching upcoming movies:', error);
+    throw error;
+  }
+};
+
+export const discoverMovies = async (
+  page: number = 1,
+  filters?: {
+    sortBy?: string;
+    genre?: string;
+    year?: string;
+    minRating?: string;
+    maxRating?: string;
+  }
+): Promise<{ results: Movie[]; total_pages: number; total_results: number; page: number }> => {
+  try {
+    const params: any = { page };
+    if (filters) {
+      if (filters.sortBy) params.sort_by = filters.sortBy;
+      if (filters.genre) params.genre = filters.genre;
+      if (filters.year) params.year = filters.year;
+      if (filters.minRating) params.min_rating = filters.minRating;
+      if (filters.maxRating) params.max_rating = filters.maxRating;
+    }
+    const response = await api.get<{ results: Movie[]; total_results: number; page: number; total_pages: number }>(`/movies/discover`, {
+      params,
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error discovering movies:', error);
     throw error;
   }
 };

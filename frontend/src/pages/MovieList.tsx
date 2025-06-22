@@ -11,9 +11,12 @@ import {
   IconButton,
   CircularProgress,
   Pagination,
+  Tabs,
+  Tab,
+  Chip,
 } from '@mui/material';
 import { Search as SearchIcon } from '@mui/icons-material';
-import { fetchPopularMovies, searchMovies } from '../services/api';
+import { fetchPopularMovies, fetchTopRatedMovies, fetchNowPlayingMovies, fetchUpcomingMovies, searchMovies } from '../services/api';
 import { Movie } from '../types';
 import Grid from '@mui/material/Grid';
 
@@ -25,20 +28,29 @@ const MovieList: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [totalResults, setTotalResults] = useState(0);
+  const [category, setCategory] = useState(0); // 0: Popular, 1: Top Rated, 2: Now Playing, 3: Upcoming
 
+  const categories = [
+    { label: 'Popular', fetch: fetchPopularMovies },
+    { label: 'Top Rated', fetch: fetchTopRatedMovies },
+    { label: 'Now Playing', fetch: fetchNowPlayingMovies },
+    { label: 'Upcoming', fetch: fetchUpcomingMovies },
+  ];
   useEffect(() => {
     fetchMovies();
     // eslint-disable-next-line
-  }, [page]);
+  }, [page, category]);
 
   const fetchMovies = async () => {
     try {
       setLoading(true);
-      const response = await fetchPopularMovies(page);
-      setMovieList(response);
-      setTotalPages(response.length > 0 ? 500 : 1); // Placeholder, adjust based on actual API response
+      const response = await categories[category].fetch(page);
+      setMovieList(response.results);
+      setTotalPages(response.total_pages);
+      setTotalResults(response.total_results);
     } catch (err: any) {
-      setError(err.response?.data?.message || err.message || 'Failed to fetch popular movies');
+      setError(err.response?.data?.message || err.message || 'Failed to fetch movies');
     } finally {
       setLoading(false);
     }
@@ -53,14 +65,20 @@ const MovieList: React.FC = () => {
     try {
       setLoading(true);
       const response = await searchMovies(searchQuery, 1);
-      setMovieList(response);
-      setTotalPages(response.length > 0 ? 500 : 1); // Placeholder
+      setMovieList(response.results);
+      setTotalPages(response.total_pages);
+      setTotalResults(response.total_results);
       setPage(1);
     } catch (err: any) {
       setError(err.response?.data?.message || err.message || 'Failed to search movies');
     } finally {
       setLoading(false);
     }
+  };
+  const handleCategoryChange = (_: React.SyntheticEvent, newValue: number) => {
+    setCategory(newValue);
+    setPage(1);
+    setSearchQuery(''); // Clear search when changing category
   };
 
   const handlePageChange = (_: React.ChangeEvent<unknown>, value: number) => {
@@ -82,9 +100,30 @@ const MovieList: React.FC = () => {
       </Box>
     );
   }
-
   return (
     <Container>
+      {/* Header with movie count from TMDB */}
+      <Box sx={{ mb: 3 }}>
+        <Typography variant="h4" gutterBottom>
+          Movie Database
+        </Typography>
+        <Chip 
+          label={`${totalResults.toLocaleString()} movies available from TMDB`} 
+          color="primary" 
+          sx={{ mb: 2 }}
+        />
+      </Box>
+
+      {/* Category Tabs */}
+      <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
+        <Tabs value={category} onChange={handleCategoryChange} aria-label="movie categories">
+          {categories.map((cat, index) => (
+            <Tab key={index} label={cat.label} />
+          ))}
+        </Tabs>
+      </Box>
+
+      {/* Search Box */}
       <Box component="form" onSubmit={handleSearch} sx={{ mb: 4 }}>
         <TextField
           fullWidth
@@ -123,10 +162,23 @@ const MovieList: React.FC = () => {
                 height="400"
                 image={`https://image.tmdb.org/t/p/w500${movie.poster_path}`}
                 alt={movie.title}
-              />
-              <CardContent sx={{ flexGrow: 1 }}>
+              />              <CardContent sx={{ flexGrow: 1 }}>
                 <Typography gutterBottom variant="h6" component="h2" noWrap>
                   {movie.title}
+                </Typography>
+                <Typography 
+                  variant="body2" 
+                  color="text.secondary" 
+                  sx={{ 
+                    display: '-webkit-box',
+                    WebkitLineClamp: 3,
+                    WebkitBoxOrient: 'vertical',
+                    overflow: 'hidden',
+                    mb: 1,
+                    height: '3.6em'
+                  }}
+                >
+                  {movie.overview}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
                   {new Date(movie.release_date).toLocaleDateString()}

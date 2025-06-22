@@ -25,8 +25,8 @@ const connectWithRetry = async (retries = 5, delay = 5000) => {
       await dbConnect();
       console.log('MongoDB connected successfully');
       
-      // Seed sample movies
-      await seedMovies();
+      // Note: Seeding is done manually via npm scripts
+      // No automatic seeding to avoid connection conflicts
       
       return;
     } catch (err) {
