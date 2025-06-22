@@ -1,6 +1,6 @@
 import express, { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
-import jwt, { SignOptions } from 'jsonwebtoken';
+import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import { User, IUser } from '../models/user.model';
 import { authMiddleware } from '../middleware/auth.middleware';
@@ -34,11 +34,10 @@ const validateRegisterInput = (req: Request, res: Response, next: () => void) =>
 // Register User
 router.post('/register', validateRegisterInput, async (req: Request, res: Response) => {
   try {
-    const { username, email, password } = req.body;
-      // Check if user already exists
-    const existingUser = await User.findOne<IUser>({ 
+    const { username, email, password } = req.body;    // Check if user already exists
+    const existingUser = await User.findOne({ 
       $or: [{ email }, { username }] 
-    }).exec();
+    });
     
     if (existingUser) {
       if (existingUser.email === email) {
@@ -53,21 +52,18 @@ router.post('/register', validateRegisterInput, async (req: Request, res: Respon
       username,
       email,
       password
-    });
-
-    await user.save();
+    });    await user.save();
 
     // Create JWT token
-    const jwtSecret = process.env.JWT_SECRET as string;
-    if (!jwtSecret) {
+    const jwtSecret = process.env.JWT_SECRET as string;    if (!jwtSecret) {
       return res.status(500).json({ message: 'Server error: JWT secret not configured' });
     }
     
     const token = jwt.sign(
       { userId: user._id },
       jwtSecret,
-      { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
-    );
+      { expiresIn: '7d' }
+    ) as string;
 
     res.status(201).json({
       token,
@@ -90,9 +86,7 @@ router.post('/login', async (req: Request, res: Response) => {
 
     if (!email || !password) {
       return res.status(400).json({ message: 'Please provide email and password' });
-    }
-
-    // Check if user exists
+    }    // Check if user exists
     const user = await User.findOne({ email });
     if (!user) {
       return res.status(400).json({ message: 'Invalid credentials' });
@@ -101,10 +95,7 @@ router.post('/login', async (req: Request, res: Response) => {
     // Validate password
     const isMatch = await user.comparePassword(password);
     if (!isMatch) {
-      return res.status(400).json({ message: 'Invalid credentials' });
-    }
-
-    // Create JWT token
+      return res.status(400).json({ message: 'Invalid credentials' });    }    // Create JWT token
     const jwtSecret = process.env.JWT_SECRET as string;
     if (!jwtSecret) {
       return res.status(500).json({ message: 'Server error: JWT secret not configured' });
@@ -113,8 +104,8 @@ router.post('/login', async (req: Request, res: Response) => {
     const token = jwt.sign(
       { userId: user._id },
       jwtSecret,
-      { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
-    );
+      { expiresIn: '7d' }
+    ) as string;
 
     res.json({
       token,
@@ -165,9 +156,7 @@ router.put('/profile', authMiddleware, async (req: Request, res: Response) => {
     
     if (email && !/\S+@\S+\.\S+/.test(email)) {
       return res.status(400).json({ message: 'Please provide a valid email address' });
-    }
-    
-    // Check if new email/username is already taken by another user
+    }    // Check if new email/username is already taken by another user
     if (email && email !== req.user.email) {
       const existingUser = await User.findOne({ email, _id: { $ne: req.user._id } });
       if (existingUser) {
@@ -180,9 +169,7 @@ router.put('/profile', authMiddleware, async (req: Request, res: Response) => {
       if (existingUser) {
         return res.status(400).json({ message: 'Username already taken' });
       }
-    }
-    
-    // Update user
+    }    // Update user
     const updatedUser = await User.findByIdAndUpdate(
       req.user._id,
       { $set: { username, email } },
@@ -243,9 +230,7 @@ router.post('/reset-password', async (req: Request, res: Response) => {
     
     if (newPassword.length < 8) {
       return res.status(400).json({ message: 'Password must be at least 8 characters long' });
-    }
-    
-    // Find user with valid reset token
+    }    // Find user with valid reset token
     const user = await User.findOne({
       passwordResetToken: token,
       passwordResetExpires: { $gt: Date.now() }

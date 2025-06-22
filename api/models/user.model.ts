@@ -2,17 +2,18 @@ import mongoose, { Document, Schema } from 'mongoose';
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 
-export interface IUser extends Document {
+export interface IUser {
+  _id?: any;
   username: string;
   email: string;
   password: string;
   passwordResetToken?: string;
   passwordResetExpires?: Date;
-  comparePassword(candidatePassword: string): Promise<boolean>;
-  createPasswordResetToken(): string;
+  comparePassword?(candidatePassword: string): Promise<boolean>;
+  createPasswordResetToken?(): string;
 }
 
-const userSchema = new Schema<IUser>({
+const userSchema = new Schema({
   username: { type: String, required: true, unique: true, trim: true, minlength: 3 },
   email: { type: String, required: true, unique: true, trim: true, lowercase: true },
   password: { type: String, required: true, minlength: 6 },
@@ -42,4 +43,4 @@ userSchema.methods.createPasswordResetToken = function () {
   return resetToken;
 };
 
-export const User = mongoose.models.User || mongoose.model<IUser>('User', userSchema);
+export const User = mongoose.models.User || mongoose.model('User', userSchema);

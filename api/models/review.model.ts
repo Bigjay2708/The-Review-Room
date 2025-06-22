@@ -1,6 +1,7 @@
 import mongoose, { Document, Schema } from 'mongoose';
 
-export interface IReview extends Document {
+export interface IReview {
+  _id?: any;
   userId: string;
   movieId: number;
   rating: number;
@@ -10,7 +11,7 @@ export interface IReview extends Document {
   username: string;
 }
 
-const reviewSchema = new Schema<IReview>({
+const reviewSchema = new Schema({
   userId: { type: String, required: true },
   movieId: { type: Number, required: true },
   rating: { type: Number, required: true },
@@ -20,4 +21,4 @@ const reviewSchema = new Schema<IReview>({
   username: { type: String, required: true },
 });
 
-export const Review = mongoose.models.Review || mongoose.model<IReview>('Review', reviewSchema);
+export const Review = mongoose.models.Review || mongoose.model('Review', reviewSchema);

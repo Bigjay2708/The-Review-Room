@@ -4,6 +4,7 @@ import { config } from 'dotenv';
 import helmet from 'helmet';
 import compression from 'compression';
 import dbConnect from './dbConnect';
+import { seedMovies } from './seedData';
 
 // Load environment variables
 config();
@@ -20,10 +21,13 @@ if (!process.env.JWT_SECRET) {
 // Enhanced MongoDB connection with retry logic
 const connectWithRetry = async (retries = 5, delay = 5000) => {
   let currentTry = 0;
-  while (currentTry < retries) {
-    try {
+  while (currentTry < retries) {    try {
       await dbConnect();
       console.log('MongoDB connected successfully');
+      
+      // Seed sample movies
+      await seedMovies();
+      
       return;
     } catch (err) {
       currentTry++;
