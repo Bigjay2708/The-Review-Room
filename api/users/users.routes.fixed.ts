@@ -35,7 +35,8 @@ const validateRegisterInput = (req: Request, res: Response, next: () => void) =>
 router.post('/register', validateRegisterInput, async (req: Request, res: Response) => {
   try {
     const { username, email, password } = req.body;
-      // Check if user already exists
+    
+    // Check if user already exists
     const existingUser = await User.findOne<IUser>({ 
       $or: [{ email }, { username }] 
     }).exec();
@@ -66,7 +67,7 @@ router.post('/register', validateRegisterInput, async (req: Request, res: Respon
     const token = jwt.sign(
       { userId: user._id },
       jwtSecret,
-      { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
+      { expiresIn: process.env.JWT_EXPIRES_IN || '7d' } as SignOptions
     );
 
     res.status(201).json({
@@ -77,8 +78,14 @@ router.post('/register', validateRegisterInput, async (req: Request, res: Respon
         email: user.email
       }
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Registration error:', error);
+    
+    // More detailed error logging for debugging
+    if (error.name === 'MongoError' || error.name === 'MongoServerError') {
+      console.error('MongoDB error code:', error.code);
+    }
+    
     res.status(500).json({ message: error instanceof Error ? error.message : 'Server error' });
   }
 });
@@ -93,12 +100,12 @@ router.post('/login', async (req: Request, res: Response) => {
     }
 
     // Check if user exists
-    const user = await User.findOne({ email });
+    const user = await User.findOne<IUser>({ email }).exec();
     if (!user) {
       return res.status(400).json({ message: 'Invalid credentials' });
     }
 
-    // Validate password
+    // Check if password is correct
     const isMatch = await user.comparePassword(password);
     if (!isMatch) {
       return res.status(400).json({ message: 'Invalid credentials' });
@@ -113,7 +120,7 @@ router.post('/login', async (req: Request, res: Response) => {
     const token = jwt.sign(
       { userId: user._id },
       jwtSecret,
-      { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
+      { expiresIn: process.env.JWT_EXPIRES_IN || '7d' } as SignOptions
     );
 
     res.json({
@@ -124,8 +131,14 @@ router.post('/login', async (req: Request, res: Response) => {
         email: user.email
       }
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Login error:', error);
+    
+    // More detailed error logging for debugging
+    if (error.name === 'MongoError' || error.name === 'MongoServerError') {
+      console.error('MongoDB error code:', error.code);
+    }
+    
     res.status(500).json({ message: error instanceof Error ? error.message : 'Server error' });
   }
 });
@@ -136,15 +149,15 @@ router.get('/profile', authMiddleware, async (req: Request, res: Response) => {
     if (!req.user) {
       return res.status(401).json({ message: 'Authentication required' });
     }
-    
+
+    // Since authMiddleware already provides user data in req.user, we can just return it
     res.json({
       id: req.user._id,
       username: req.user.username,
-      email: req.user.email,
-      createdAt: req.user.createdAt
+      email: req.user.email
     });
   } catch (error) {
-    console.error('Profile retrieval error:', error);
+    console.error('Get profile error:', error);
     res.status(500).json({ message: error instanceof Error ? error.message : 'Server error' });
   }
 });
@@ -157,113 +170,131 @@ router.put('/profile', authMiddleware, async (req: Request, res: Response) => {
     if (!req.user) {
       return res.status(401).json({ message: 'Authentication required' });
     }
+
+    // Initial validation
+    if (email && !/\S+@\S+\.\S+/.test(email)) {
+      return res.status(400).json({ message: 'Invalid email format' });
+    }
     
-    // Validate input
     if (username && username.trim().length < 3) {
       return res.status(400).json({ message: 'Username must be at least 3 characters' });
     }
-    
-    if (email && !/\S+@\S+\.\S+/.test(email)) {
-      return res.status(400).json({ message: 'Please provide a valid email address' });
-    }
-    
-    // Check if new email/username is already taken by another user
+
+    // Check for uniqueness if changing email or username
     if (email && email !== req.user.email) {
-      const existingUser = await User.findOne({ email, _id: { $ne: req.user._id } });
-      if (existingUser) {
+      const existingEmail = await User.findOne<IUser>({ email }).exec();
+      if (existingEmail) {
         return res.status(400).json({ message: 'Email already in use' });
       }
     }
     
     if (username && username !== req.user.username) {
-      const existingUser = await User.findOne({ username, _id: { $ne: req.user._id } });
-      if (existingUser) {
+      const existingUsername = await User.findOne<IUser>({ username }).exec();
+      if (existingUsername) {
         return res.status(400).json({ message: 'Username already taken' });
       }
     }
     
-    // Update user
+    // Update user with changes
     const updatedUser = await User.findByIdAndUpdate(
       req.user._id,
-      { $set: { username, email } },
-      { new: true, runValidators: true }
+      { 
+        $set: { 
+          ...(username && { username }),
+          ...(email && { email })
+        } 
+      },
+      { new: true }
     ).select('-password');
     
     if (!updatedUser) {
       return res.status(404).json({ message: 'User not found' });
     }
     
-    res.json(updatedUser);
+    res.json({
+      id: updatedUser._id,
+      username: updatedUser.username,
+      email: updatedUser.email
+    });
   } catch (error) {
-    console.error('Profile update error:', error);
+    console.error('Update profile error:', error);
     res.status(500).json({ message: error instanceof Error ? error.message : 'Server error' });
   }
 });
 
-// Password reset request
+// Forgot password route
 router.post('/forgot-password', async (req: Request, res: Response) => {
   try {
     const { email } = req.body;
     
-    if (!email) {
-      return res.status(400).json({ message: 'Please provide an email address' });
+    if (!email || !/\S+@\S+\.\S+/.test(email)) {
+      return res.status(400).json({ message: 'Please provide a valid email' });
     }
     
-    const user = await User.findOne({ email });
+    const user = await User.findOne<IUser>({ email }).exec();
     if (!user) {
-      // Don't reveal that email doesn't exist for security
-      return res.status(200).json({ message: 'If your email is registered, you will receive a reset link' });
+      // We don't want to reveal if the email exists or not for security
+      // So we return a success message even if the email doesn't exist
+      return res.status(200).json({ 
+        message: 'If your email address exists in our database, you will receive a password recovery link shortly.' 
+      });
     }
-    
-    // Generate password reset token
+
+    // Generate reset token
     const resetToken = user.createPasswordResetToken();
-    await user.save({ validateBeforeSave: false });
-    
-    // In a real app, send an email with the reset token
-    // For now, just return success response
-    res.status(200).json({ 
-      message: 'If your email is registered, you will receive a reset link',
-      // In development, return the token for testing
-      ...(process.env.NODE_ENV !== 'production' && { resetToken })
+    await user.save();
+
+    // In a real app, you would send an email here with the reset token/link
+    // For development/demo purposes, return the token in the response
+    res.json({ 
+      message: 'Password reset token generated. In a production environment, this would be emailed to you.',
+      resetToken 
     });
   } catch (error) {
-    console.error('Password reset request error:', error);
+    console.error('Forgot password error:', error);
     res.status(500).json({ message: error instanceof Error ? error.message : 'Server error' });
   }
 });
 
-// Reset password with token
+// Reset password route
 router.post('/reset-password', async (req: Request, res: Response) => {
   try {
     const { token, newPassword } = req.body;
     
-    if (!token || !newPassword) {
-      return res.status(400).json({ message: 'Please provide token and new password' });
+    if (!token) {
+      return res.status(400).json({ message: 'Reset token is required' });
     }
     
-    if (newPassword.length < 8) {
-      return res.status(400).json({ message: 'Password must be at least 8 characters long' });
+    if (!newPassword || newPassword.length < 8) {
+      return res.status(400).json({ message: 'New password must be at least 8 characters' });
     }
     
-    // Find user with valid reset token
-    const user = await User.findOne({
-      passwordResetToken: token,
-      passwordResetExpires: { $gt: Date.now() }
-    });
+    // Hash the reset token to compare with the stored one
+    const hashedToken = crypto
+      .createHash('sha256')
+      .update(token)
+      .digest('hex');
+      
+    // Find user with this token and check if token is still valid
+    const user = await User.findOne<IUser>({
+      passwordResetToken: hashedToken,
+      passwordResetExpires: { $gt: new Date() }
+    }).exec();
     
     if (!user) {
       return res.status(400).json({ message: 'Token is invalid or has expired' });
     }
     
-    // Update password
+    // Set the new password and clear reset fields
     user.password = newPassword;
     user.passwordResetToken = undefined;
     user.passwordResetExpires = undefined;
+    
     await user.save();
     
-    res.status(200).json({ message: 'Password has been reset successfully' });
+    res.json({ message: 'Password has been reset successfully' });
   } catch (error) {
-    console.error('Password reset error:', error);
+    console.error('Reset password error:', error);
     res.status(500).json({ message: error instanceof Error ? error.message : 'Server error' });
   }
 });
