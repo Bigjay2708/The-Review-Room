@@ -1,4 +1,4 @@
-import axios, { AxiosError, AxiosRequestConfig, AxiosResponse } from 'axios';
+import axios from 'axios';
 import { Movie, User, AuthResponse } from '../types';
 
 // Use environment variable with fallback, prefixed with /api for consistency
@@ -33,8 +33,8 @@ api.interceptors.request.use(
 // Add response interceptor to handle token expiration
 api.interceptors.response.use(
   (response) => response,
-  async (error: AxiosError) => {
-    const originalRequest = error.config as AxiosRequestConfig & { _retry?: boolean };
+  async (error: any) => {
+    const originalRequest = error.config as any & { _retry?: boolean };
     
     // If error is 401 (Unauthorized) and it's not a retry
     if (error.response?.status === 401 && !originalRequest._retry) {

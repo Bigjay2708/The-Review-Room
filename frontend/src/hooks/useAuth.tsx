@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { loginUser, registerUser, getUserProfile } from '../services/api';
-import jwt_decode from 'jwt-decode';
+import * as jwt_decode from 'jwt-decode';
 
 interface User {
   id: string;
@@ -40,7 +40,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (token) {
           // Verify token hasn't expired
           try {
-            const decoded = jwt_decode<JwtPayload>(token);
+            const decoded = jwt_decode.jwtDecode<JwtPayload>(token);
             const currentTime = Date.now() / 1000;
             
             if (decoded.exp < currentTime) {

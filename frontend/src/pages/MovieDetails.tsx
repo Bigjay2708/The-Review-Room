@@ -161,5 +161,3 @@ const MovieDetails: React.FC = () => {
 };
 
 export default MovieDetails;
-
-export default MovieDetails;

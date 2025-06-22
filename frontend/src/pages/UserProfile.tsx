@@ -15,11 +15,10 @@ const UserProfile: React.FC = () => {
   useEffect(() => {
     const fetchProfile = async () => {
       setLoading(true);
-      setError(null);
-      try {
+      setError(null);      try {
         const token = localStorage.getItem('token') || sessionStorage.getItem('token');
         if (!token) throw new Error('No token found');
-        const data = await getUserProfile(token);
+        const data = await getUserProfile();
         setProfile(data);
         setForm({ username: data.username, email: data.email });
       } catch (err: any) {
@@ -37,11 +36,10 @@ const UserProfile: React.FC = () => {
 
   const handleSave = async () => {
     setError(null);
-    setSuccess(false);
-    try {
+    setSuccess(false);    try {
       const token = localStorage.getItem('token') || sessionStorage.getItem('token');
       if (!token) throw new Error('No token found');
-      await updateUserProfile(token, form);
+      await updateUserProfile(form);
       setSuccess(true);
       setEditMode(false);
       setProfile({ ...profile, ...form });
