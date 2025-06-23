@@ -14,6 +14,7 @@ import {
   Tabs,
   Tab,
   Chip,
+  Button,
 } from '@mui/material';
 import { Search as SearchIcon } from '@mui/icons-material';
 import { fetchPopularMovies, fetchTopRatedMovies, fetchNowPlayingMovies, fetchUpcomingMovies, searchMovies } from '../services/api';

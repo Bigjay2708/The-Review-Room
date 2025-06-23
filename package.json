@@ -1,15 +1,21 @@
 {
   "name": "the-review-room",
   "version": "1.0.0",
-  "description": "Movie review application",  "scripts": {
+  "description": "Movie review application",
+  "private": true,
+  "scripts": {
     "build": "npm run build:frontend",
     "build:api": "cd api && npm install",
-    "build:frontend": "cd frontend && npm install && npm run build",
+    "build:frontend": "cd frontend && npm install && CI=false npm run build",
     "dev": "concurrently \"npm run dev:api\" \"npm run dev:frontend\"",
     "dev:api": "cd api && npm run dev",
-    "dev:frontend": "cd frontend && npm start"
+    "dev:frontend": "cd frontend && npm start",
+    "vercel-build": "CI=false npm run build"
   },
   "devDependencies": {
     "concurrently": "^8.0.1"
+  },
+  "engines": {
+    "node": ">=16.0.0"
   }
 }
