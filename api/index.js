@@ -15,7 +15,7 @@ app.use(cors({
 }));
 
 // Health check endpoint
-app.get('/api/health', (req, res) => {
+app.get('/health', (req, res) => {
   res.json({ 
     status: 'ok',
     timestamp: new Date().toISOString(),
@@ -24,7 +24,7 @@ app.get('/api/health', (req, res) => {
 });
 
 // Default movies endpoint
-app.get('/api/movies', (req, res) => {
+app.get('/movies', (req, res) => {
   res.json({
     results: [
       {
@@ -44,7 +44,7 @@ app.get('/api/movies', (req, res) => {
 });
 
 // Popular movies endpoint
-app.get('/api/movies/popular', (req, res) => {
+app.get('/movies/popular', (req, res) => {
   res.json({
     results: [
       {
@@ -73,7 +73,7 @@ app.get('/api/movies/popular', (req, res) => {
 });
 
 // Top rated movies endpoint
-app.get('/api/movies/top_rated', (req, res) => {
+app.get('/movies/top_rated', (req, res) => {
   res.json({
     results: [
       {
@@ -93,7 +93,7 @@ app.get('/api/movies/top_rated', (req, res) => {
 });
 
 // Movie details endpoint
-app.get('/api/movies/:id', (req, res) => {
+app.get('/movies/:id', (req, res) => {
   res.json({
     id: parseInt(req.params.id),
     title: `Movie ${req.params.id}`,
@@ -121,5 +121,12 @@ if (require.main === module) {
   });
 }
 
-// Export for Vercel
-module.exports = app;
+// Export handler for Vercel serverless
+module.exports = (req, res) => {
+  // Remove base path from request URL that Vercel adds
+  // based on the route configuration
+  req.url = req.url.replace(/^\/api/, '');
+  
+  // Let the Express app handle the request
+  return app(req, res);
+};

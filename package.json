@@ -1,9 +1,9 @@
 {
   "name": "the-review-room",
   "version": "1.0.0",
-  "description": "Movie review application",
-  "scripts": {
-    "build": "npm run build:frontend",
+  "description": "Movie review application",  "scripts": {
+    "build": "npm run build:api && npm run build:frontend",
+    "build:api": "cd api && npm install",
     "build:frontend": "cd frontend && npm install && npm run build",
     "dev": "concurrently \"npm run dev:api\" \"npm run dev:frontend\"",
     "dev:api": "cd api && npm run dev",
