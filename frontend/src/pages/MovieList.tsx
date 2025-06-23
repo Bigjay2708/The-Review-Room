@@ -101,17 +101,18 @@ const MovieList: React.FC = () => {
     );
   }
   return (
-    <Container>
-      {/* Header with movie count from TMDB */}
+    <Container>      {/* Header with movie count from TMDB */}
       <Box sx={{ mb: 3 }}>
         <Typography variant="h4" gutterBottom>
           Movie Database
         </Typography>
-        <Chip 
-          label={`${totalResults.toLocaleString()} movies available from TMDB`} 
-          color="primary" 
-          sx={{ mb: 2 }}
-        />
+        {totalResults > 0 && (
+          <Chip 
+            label={`${totalResults.toLocaleString()} movies available from TMDB`} 
+            color="primary" 
+            sx={{ mb: 2 }}
+          />
+        )}
       </Box>
 
       {/* Category Tabs */}

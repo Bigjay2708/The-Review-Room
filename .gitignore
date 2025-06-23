@@ -33,3 +33,4 @@ Thumbs.db
 # Backend specific (if any, though included in general)
 # backend/node_modules/
 # backend/.env 
+.vercel
