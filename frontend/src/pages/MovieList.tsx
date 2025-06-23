@@ -36,21 +36,34 @@ const MovieList: React.FC = () => {
     { label: 'Top Rated', fetch: fetchTopRatedMovies },
     { label: 'Now Playing', fetch: fetchNowPlayingMovies },
     { label: 'Upcoming', fetch: fetchUpcomingMovies },
-  ];
-  useEffect(() => {
+  ];  useEffect(() => {
+    console.log('MovieList mounted or deps changed. Page:', page, 'Category:', category);
     fetchMovies();
     // eslint-disable-next-line
   }, [page, category]);
-
   const fetchMovies = async () => {
     try {
       setLoading(true);
       const response = await categories[category].fetch(page);
-      setMovieList(response.results);
-      setTotalPages(response.total_pages);
-      setTotalResults(response.total_results);
+      
+      console.log('API Response:', response);
+      
+      // Check if response and results exist before updating state
+      if (response && response.results) {
+        setMovieList(response.results);
+        setTotalPages(response.total_pages || 1);
+        setTotalResults(response.total_results || 0);
+      } else {
+        console.error('Invalid API response format:', response);
+        setError('Received invalid data from API');
+        // Set empty movie list to prevent map errors
+        setMovieList([]);
+      }
     } catch (err: any) {
+      console.error('Error in fetchMovies:', err);
       setError(err.response?.data?.message || err.message || 'Failed to fetch movies');
+      // Set empty movie list to prevent map errors
+      setMovieList([]);
     } finally {
       setLoading(false);
     }
@@ -140,14 +153,13 @@ const MovieList: React.FC = () => {
             ),
           }}
         />
-      </Box>
-
-      <Grid container spacing={3}>
-        {movieList.map((movie) => (
-          <Grid key={movie.id} style={{ flexBasis: '25%', maxWidth: '25%' }}>
-            <Card
-              sx={{
-                height: '100%',
+      </Box>      <Grid container spacing={3}>
+        {movieList && movieList.length > 0 ? (
+          movieList.map((movie) => (
+            <Grid key={movie.id} style={{ flexBasis: '25%', maxWidth: '25%' }}>
+              <Card
+                sx={{
+                  height: '100%',
                 display: 'flex',
                 flexDirection: 'column',
                 cursor: 'pointer',
@@ -183,11 +195,19 @@ const MovieList: React.FC = () => {
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
                   {new Date(movie.release_date).toLocaleDateString()}
-                </Typography>
-              </CardContent>
+                </Typography>              </CardContent>
             </Card>
           </Grid>
-        ))}
+        ))
+      ) : (
+        <Grid item xs={12}>
+          <Box sx={{ textAlign: 'center', mt: 3, mb: 3 }}>
+            <Typography variant="h6">
+              {error ? `Error: ${error}` : "No movies found"}
+            </Typography>
+          </Box>
+        </Grid>
+      )}
       </Grid>
 
       {totalPages > 1 && (

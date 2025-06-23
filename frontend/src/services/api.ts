@@ -54,13 +54,45 @@ api.interceptors.response.use(
 
 export const fetchPopularMovies = async (page: number = 1): Promise<{ results: Movie[]; total_pages: number; total_results: number; page: number }> => {
   try {
+    console.log(`Fetching popular movies with page=${page}`);
     const response = await api.get<{ results: Movie[]; total_results: number; page: number; total_pages: number }>(`/movies/popular`, {
       params: { page },
     });
+    console.log('Popular movies API response:', response);
     return response.data;
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error fetching popular movies:', error);
-    throw error;
+    console.error('Error details:', {
+      message: error.message,
+      response: error.response?.data,
+      status: error.response?.status
+    });
+      // Fallback data to prevent blank screen
+    return {
+      results: [
+        {
+          id: 999,
+          title: "API Error - Fallback Movie",
+          overview: "This is a fallback movie shown when the API request fails. Please check the console for error details.",
+          poster_path: "/sample_poster.jpg",
+          backdrop_path: "/sample_backdrop.jpg",
+          release_date: "2025-01-01",
+          vote_average: 0,
+          adult: false,
+          genre_ids: [28],
+          original_language: "en",
+          original_title: "API Error - Fallback Movie",
+          popularity: 0,
+          video: false,
+          vote_count: 0,
+          runtime: 0,
+          tagline: "API Error"
+        }
+      ],
+      page: 1,
+      total_pages: 1,
+      total_results: 1
+    };
   }
 };
 

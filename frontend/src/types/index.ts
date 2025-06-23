@@ -1,21 +1,23 @@
 export interface Movie {
-  adult: boolean;
-  backdrop_path: string | null;
-  genre_ids: number[];
   id: number;
-  original_language: string;
-  original_title: string;
-  overview: string;
-  popularity: number;
-  poster_path: string | null;
-  release_date: string;
   title: string;
-  video: boolean;
+  overview: string;
+  poster_path: string | null;
+  backdrop_path: string | null;
+  release_date: string;
   vote_average: number;
-  vote_count: number;
+  
+  // Optional properties that might not be in all API responses
+  adult?: boolean;
+  genre_ids?: number[];
+  original_language?: string;
+  original_title?: string;
+  popularity?: number;
+  video?: boolean;
+  vote_count?: number;
   genres?: Array<{ id: number; name: string }>;
-  runtime: number;
-  tagline: string;
+  runtime?: number;
+  tagline?: string;
 }
 
 export interface Genre {
