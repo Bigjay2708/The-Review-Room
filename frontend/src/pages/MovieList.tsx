@@ -52,9 +52,29 @@ const MovieList: React.FC = () => {
       
       // Check if response and results exist before updating state
       if (response && Array.isArray(response.results)) {
-        setMovieList(response.results);
-        setTotalPages(response.total_pages || 1);
-        setTotalResults(response.total_results || 0);
+        // Additional validation on results
+        const validMovies = response.results.filter(movie => {
+          if (!movie || typeof movie !== 'object') {
+            console.warn('Invalid movie object:', movie);
+            return false;
+          }
+          // Make sure essential properties exist
+          if (!movie.id || !movie.title) {
+            console.warn('Movie missing required fields:', movie);
+            return false;
+          }
+          return true;
+        });
+        
+        if (validMovies.length === 0 && response.results.length > 0) {
+          console.error('No valid movies in response:', response.results);
+          setError('Received movies in an invalid format');
+          setMovieList([]);
+        } else {
+          setMovieList(validMovies);
+          setTotalPages(response.total_pages || 1);
+          setTotalResults(response.total_results || validMovies.length);
+        }
       } else {
         console.error('Invalid API response format:', response);
         setError('Received invalid data from API');
@@ -117,11 +137,28 @@ const MovieList: React.FC = () => {
       </Box>
     );
   }
-
   if (error && !movieList.length) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="60vh">
+      <Box display="flex" flexDirection="column" justifyContent="center" alignItems="center" minHeight="60vh">
+        <Typography variant="h5" color="error" gutterBottom>Error Loading Movies</Typography>
         <Typography color="error">{error}</Typography>
+        <Button 
+          variant="contained" 
+          color="primary" 
+          onClick={fetchMovies} 
+          sx={{ mt: 2 }}
+        >
+          Try Again
+        </Button>        <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
+          You can also try the <Button 
+            variant="text" 
+            color="info" 
+            onClick={() => navigate('/api-debug')} 
+            sx={{ p: 0, textTransform: 'none', textDecoration: 'underline' }}
+          >
+            API debug page
+          </Button> to diagnose connection issues.
+        </Typography>
       </Box>
     );
   }
@@ -168,58 +205,80 @@ const MovieList: React.FC = () => {
       </Box>      <Grid container spacing={3}>
         {movieList && movieList.length > 0 ? (
           movieList.map((movie) => (
-            <Grid key={movie.id} style={{ flexBasis: '25%', maxWidth: '25%' }}>
+            <Grid item xs={12} sm={6} md={4} lg={3} key={movie.id || Math.random()}>
               <Card
                 sx={{
                   height: '100%',
-                display: 'flex',
-                flexDirection: 'column',
-                cursor: 'pointer',
-                '&:hover': {
-                  transform: 'scale(1.02)',
-                  transition: 'transform 0.2s ease-in-out',
-                },
-              }}
-              onClick={() => navigate(`/movies/${movie.id}`)}
-            >
-              <CardMedia
-                component="img"
-                height="400"
-                image={`https://image.tmdb.org/t/p/w500${movie.poster_path}`}
-                alt={movie.title}
-              />              <CardContent sx={{ flexGrow: 1 }}>
-                <Typography gutterBottom variant="h6" component="h2" noWrap>
-                  {movie.title}
-                </Typography>
-                <Typography 
-                  variant="body2" 
-                  color="text.secondary" 
-                  sx={{ 
-                    display: '-webkit-box',
-                    WebkitLineClamp: 3,
-                    WebkitBoxOrient: 'vertical',
-                    overflow: 'hidden',
-                    mb: 1,
-                    height: '3.6em'
+                  display: 'flex',
+                  flexDirection: 'column',
+                  cursor: 'pointer',
+                  '&:hover': {
+                    transform: 'scale(1.02)',
+                    transition: 'transform 0.2s ease-in-out',
+                  },
+                }}
+                onClick={() => navigate(`/movies/${movie.id}`)}
+              >
+                <CardMedia
+                  component="img"
+                  height="400"
+                  image={movie.poster_path ? `https://image.tmdb.org/t/p/w500${movie.poster_path}` : '/placeholder-movie.png'}
+                  alt={movie.title || 'Movie poster'}
+                  onError={(e) => {
+                    // Fallback image on error
+                    e.currentTarget.src = '/placeholder-movie.png';
                   }}
-                >
-                  {movie.overview}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  {new Date(movie.release_date).toLocaleDateString()}
-                </Typography>              </CardContent>
-            </Card>
+                />
+                <CardContent sx={{ flexGrow: 1 }}>
+                  <Typography gutterBottom variant="h6" component="h2" noWrap>
+                    {movie.title || 'Untitled Movie'}
+                  </Typography>
+                  <Typography 
+                    variant="body2" 
+                    color="text.secondary" 
+                    sx={{ 
+                      display: '-webkit-box',
+                      WebkitLineClamp: 3,
+                      WebkitBoxOrient: 'vertical',
+                      overflow: 'hidden',
+                      mb: 1,
+                      height: '3.6em'
+                    }}
+                  >
+                    {movie.overview || 'No description available'}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {movie.release_date ? new Date(movie.release_date).toLocaleDateString() : 'Release date unknown'}
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Grid>
+          ))
+        ) : (
+          <Grid item xs={12}>
+            <Box sx={{ textAlign: 'center', mt: 3, mb: 3 }}>
+              {loading ? (
+                <CircularProgress size={40} />
+              ) : (
+                <>
+                  <Typography variant="h6" gutterBottom>
+                    {error ? `Error: ${error}` : "No movies found"}
+                  </Typography>
+                  {error && (
+                    <Button 
+                      variant="contained" 
+                      color="primary" 
+                      onClick={fetchMovies} 
+                      sx={{ mt: 2 }}
+                    >
+                      Try Again
+                    </Button>
+                  )}
+                </>
+              )}
+            </Box>
           </Grid>
-        ))
-      ) : (
-        <Grid item xs={12}>
-          <Box sx={{ textAlign: 'center', mt: 3, mb: 3 }}>
-            <Typography variant="h6">
-              {error ? `Error: ${error}` : "No movies found"}
-            </Typography>
-          </Box>
-        </Grid>
-      )}
+        )}
       </Grid>
 
       {totalPages > 1 && (

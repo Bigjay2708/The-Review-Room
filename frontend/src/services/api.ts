@@ -33,12 +33,21 @@ api.interceptors.request.use(
 // Add response interceptor to handle errors and validate response format
 api.interceptors.response.use(
   (response) => {
-    // Check if response data is valid
-    if (response.data && (response.data.results || response.data.id)) {
+    // Log all successful responses for debugging
+    console.log(`API Response [${response.config.url}]:`, {
+      status: response.status,
+      contentType: response.headers['content-type'],
+      data: response.data
+    });
+    
+    // Check if the response is valid
+    // Accept any JSON response that has a data property
+    // Don't do strict validation here
+    if (response.data) {
       return response;
     } else {
-      console.error('Invalid API response format:', response.data);
-      return Promise.reject(new Error('Invalid API response format'));
+      console.error('Empty API response:', response);
+      return Promise.reject(new Error('Empty API response'));
     }
   },
   async (error: any) => {
@@ -49,7 +58,8 @@ api.interceptors.response.use(
       method: originalRequest?.method,
       status: error.response?.status,
       data: error.response?.data,
-      message: error.message
+      message: error.message,
+      contentType: error.response?.headers?.['content-type']
     });
     
     // If error is 401 (Unauthorized) and it's not a retry
@@ -71,23 +81,56 @@ api.interceptors.response.use(
 export const fetchPopularMovies = async (page: number = 1): Promise<{ results: Movie[]; total_pages: number; total_results: number; page: number }> => {
   try {
     console.log(`Fetching popular movies with page=${page}`);
-    const response = await api.get<{ results: Movie[]; total_results: number; page: number; total_pages: number }>(`/movies/popular`, {
+    const response = await api.get(`/movies/popular`, {
       params: { page },
       headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json'
+        'Accept': 'application/json'
       }
     });
     
     console.log('Popular movies API response:', response);
     
-    // Validate response structure
-    if (!response.data || !Array.isArray(response.data.results)) {
-      console.error('Invalid API response format:', response.data);
-      throw new Error('Invalid API response format');
+    // More flexible validation - check for data and try to adapt if structure isn't exact
+    if (!response.data) {
+      throw new Error('Empty API response');
     }
     
-    return response.data;
+    // If we get data but no results array, try to adapt
+    if (!response.data.results) {
+      console.warn('API response missing results array, attempting to adapt:', response.data);
+      
+      // If we have a direct array, use it
+      if (Array.isArray(response.data)) {
+        return {
+          results: response.data,
+          page: 1,
+          total_pages: 1, 
+          total_results: response.data.length
+        };
+      }
+      
+      // If we have an object with movie-like properties, wrap it
+      if (response.data.id && response.data.title) {
+        return {
+          results: [response.data],
+          page: 1,
+          total_pages: 1,
+          total_results: 1
+        };
+      }
+    }
+    
+    // Ensure results is always an array
+    if (response.data.results && !Array.isArray(response.data.results)) {
+      response.data.results = [response.data.results];
+    }
+    
+    return {
+      results: response.data.results || [],
+      page: response.data.page || 1,
+      total_pages: response.data.total_pages || 1,
+      total_results: response.data.total_results || (response.data.results ? response.data.results.length : 0)
+    };
   } catch (error: any) {
     console.error('Error fetching popular movies:', error);
     console.error('Error details:', {
@@ -171,37 +214,274 @@ export const fetchMovieDetails = async (id: number): Promise<Movie> => {
 // Add new API functions for different movie categories
 export const fetchTopRatedMovies = async (page: number = 1): Promise<{ results: Movie[]; total_pages: number; total_results: number; page: number }> => {
   try {
-    const response = await api.get<{ results: Movie[]; total_results: number; page: number; total_pages: number }>(`/movies/top-rated`, {
+    console.log(`Fetching top rated movies with page=${page}`);
+    const response = await api.get(`/movies/top_rated`, {
       params: { page },
+      headers: {
+        'Accept': 'application/json'
+      }
     });
-    return response.data;
-  } catch (error) {
+    
+    console.log('Top rated movies API response:', response);
+    
+    // More flexible validation - check for data and try to adapt if structure isn't exact
+    if (!response.data) {
+      throw new Error('Empty API response');
+    }
+    
+    // If we get data but no results array, try to adapt
+    if (!response.data.results) {
+      console.warn('API response missing results array, attempting to adapt:', response.data);
+      
+      // If we have a direct array, use it
+      if (Array.isArray(response.data)) {
+        return {
+          results: response.data,
+          page: 1,
+          total_pages: 1, 
+          total_results: response.data.length
+        };
+      }
+      
+      // If we have an object with movie-like properties, wrap it
+      if (response.data.id && response.data.title) {
+        return {
+          results: [response.data],
+          page: 1,
+          total_pages: 1,
+          total_results: 1
+        };
+      }
+    }
+    
+    // Ensure results is always an array
+    if (response.data.results && !Array.isArray(response.data.results)) {
+      response.data.results = [response.data.results];
+    }
+    
+    return {
+      results: response.data.results || [],
+      page: response.data.page || 1,
+      total_pages: response.data.total_pages || 1,
+      total_results: response.data.total_results || (response.data.results ? response.data.results.length : 0)
+    };
+  } catch (error: any) {
     console.error('Error fetching top rated movies:', error);
-    throw error;
+    console.error('Error details:', {
+      message: error.message,
+      response: error.response?.data,
+      status: error.response?.status,
+      headers: error.response?.headers
+    });
+    
+    // Fallback data to prevent blank screen
+    return {
+      results: [
+        {
+          id: 998,
+          title: "API Error - Fallback Top Rated Movie",
+          overview: "This is a fallback movie shown when the API request fails. Please check the console for error details.",
+          poster_path: "/sample_poster.jpg",
+          backdrop_path: "/sample_backdrop.jpg",
+          release_date: "2025-01-01",
+          vote_average: 0,
+          adult: false,
+          genre_ids: [28],
+          original_language: "en",
+          original_title: "API Error - Fallback Top Rated Movie",
+          popularity: 0,
+          video: false,
+          vote_count: 0,
+          runtime: 0,
+          tagline: "API Error"
+        }
+      ],
+      page: 1,
+      total_pages: 1,
+      total_results: 1
+    };
   }
 };
 
 export const fetchNowPlayingMovies = async (page: number = 1): Promise<{ results: Movie[]; total_pages: number; total_results: number; page: number }> => {
   try {
-    const response = await api.get<{ results: Movie[]; total_results: number; page: number; total_pages: number }>(`/movies/now-playing`, {
+    console.log(`Fetching now playing movies with page=${page}`);
+    const response = await api.get(`/movies/now_playing`, {
       params: { page },
+      headers: {
+        'Accept': 'application/json'
+      }
     });
-    return response.data;
-  } catch (error) {
+    
+    console.log('Now playing movies API response:', response);
+    
+    // More flexible validation - check for data and try to adapt if structure isn't exact
+    if (!response.data) {
+      throw new Error('Empty API response');
+    }
+    
+    // If we get data but no results array, try to adapt
+    if (!response.data.results) {
+      console.warn('API response missing results array, attempting to adapt:', response.data);
+      
+      // If we have a direct array, use it
+      if (Array.isArray(response.data)) {
+        return {
+          results: response.data,
+          page: 1,
+          total_pages: 1, 
+          total_results: response.data.length
+        };
+      }
+      
+      // If we have an object with movie-like properties, wrap it
+      if (response.data.id && response.data.title) {
+        return {
+          results: [response.data],
+          page: 1,
+          total_pages: 1,
+          total_results: 1
+        };
+      }
+    }
+    
+    // Ensure results is always an array
+    if (response.data.results && !Array.isArray(response.data.results)) {
+      response.data.results = [response.data.results];
+    }
+    
+    return {
+      results: response.data.results || [],
+      page: response.data.page || 1,
+      total_pages: response.data.total_pages || 1,
+      total_results: response.data.total_results || (response.data.results ? response.data.results.length : 0)
+    };
+  } catch (error: any) {
     console.error('Error fetching now playing movies:', error);
-    throw error;
+    console.error('Error details:', {
+      message: error.message,
+      response: error.response?.data,
+      status: error.response?.status,
+      headers: error.response?.headers
+    });
+    
+    // Fallback data to prevent blank screen
+    return {
+      results: [
+        {
+          id: 997,
+          title: "API Error - Fallback Now Playing Movie",
+          overview: "This is a fallback movie shown when the API request fails. Please check the console for error details.",
+          poster_path: "/sample_poster.jpg",
+          backdrop_path: "/sample_backdrop.jpg",
+          release_date: "2025-01-01",
+          vote_average: 0,
+          adult: false,
+          genre_ids: [28],
+          original_language: "en",
+          original_title: "API Error - Fallback Now Playing Movie",
+          popularity: 0,
+          video: false,
+          vote_count: 0,
+          runtime: 0,
+          tagline: "API Error"
+        }
+      ],
+      page: 1,
+      total_pages: 1,
+      total_results: 1
+    };
   }
 };
 
 export const fetchUpcomingMovies = async (page: number = 1): Promise<{ results: Movie[]; total_pages: number; total_results: number; page: number }> => {
   try {
-    const response = await api.get<{ results: Movie[]; total_results: number; page: number; total_pages: number }>(`/movies/upcoming`, {
+    console.log(`Fetching upcoming movies with page=${page}`);
+    const response = await api.get(`/movies/upcoming`, {
       params: { page },
+      headers: {
+        'Accept': 'application/json'
+      }
     });
-    return response.data;
-  } catch (error) {
+    
+    console.log('Upcoming movies API response:', response);
+    
+    // More flexible validation - check for data and try to adapt if structure isn't exact
+    if (!response.data) {
+      throw new Error('Empty API response');
+    }
+    
+    // If we get data but no results array, try to adapt
+    if (!response.data.results) {
+      console.warn('API response missing results array, attempting to adapt:', response.data);
+      
+      // If we have a direct array, use it
+      if (Array.isArray(response.data)) {
+        return {
+          results: response.data,
+          page: 1,
+          total_pages: 1, 
+          total_results: response.data.length
+        };
+      }
+      
+      // If we have an object with movie-like properties, wrap it
+      if (response.data.id && response.data.title) {
+        return {
+          results: [response.data],
+          page: 1,
+          total_pages: 1,
+          total_results: 1
+        };
+      }
+    }
+    
+    // Ensure results is always an array
+    if (response.data.results && !Array.isArray(response.data.results)) {
+      response.data.results = [response.data.results];
+    }
+    
+    return {
+      results: response.data.results || [],
+      page: response.data.page || 1,
+      total_pages: response.data.total_pages || 1,
+      total_results: response.data.total_results || (response.data.results ? response.data.results.length : 0)
+    };
+  } catch (error: any) {
     console.error('Error fetching upcoming movies:', error);
-    throw error;
+    console.error('Error details:', {
+      message: error.message,
+      response: error.response?.data,
+      status: error.response?.status,
+      headers: error.response?.headers
+    });
+    
+    // Fallback data to prevent blank screen
+    return {
+      results: [
+        {
+          id: 996,
+          title: "API Error - Fallback Upcoming Movie",
+          overview: "This is a fallback movie shown when the API request fails. Please check the console for error details.",
+          poster_path: "/sample_poster.jpg",
+          backdrop_path: "/sample_backdrop.jpg",
+          release_date: "2025-01-01",
+          vote_average: 0,
+          adult: false,
+          genre_ids: [28],
+          original_language: "en",
+          original_title: "API Error - Fallback Upcoming Movie",
+          popularity: 0,
+          video: false,
+          vote_count: 0,
+          runtime: 0,
+          tagline: "API Error"
+        }
+      ],
+      page: 1,
+      total_pages: 1,
+      total_results: 1
+    };
   }
 };
 

@@ -33,6 +33,14 @@ app.use((req, res, next) => {
     return res.status(200).end();
   }
   
+  // Handle URL normalization for dashes vs underscores
+  // Convert hyphenated URLs to underscore versions for consistency
+  if (req.url.includes('-')) {
+    const normalizedUrl = req.url.replace(/-/g, '_');
+    console.log(`Normalized URL from ${req.url} to ${normalizedUrl}`);
+    req.url = normalizedUrl;
+  }
+  
   next();
 });
 
@@ -231,6 +239,16 @@ app.get('/movies/:id', (req, res) => {
     release_date: "2025-01-01",
     vote_average: 8.5,
     genres: [{ id: 28, name: "Action" }]
+  });
+});
+
+// Error handler
+app.use((err, req, res, next) => {
+  console.error('API Error:', err);
+  res.status(500).json({
+    error: 'Internal Server Error',
+    message: err.message,
+    timestamp: new Date().toISOString()
   });
 });
 
