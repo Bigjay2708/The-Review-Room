@@ -2,7 +2,7 @@ import axios from 'axios';
 import { Movie, User, AuthResponse } from '../types';
 
 // Use environment variable with fallback, prefixed with /api for consistency
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://the-review-room.vercel.app/api';
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || '/api';
 const TMDB_API_KEY = process.env.REACT_APP_TMDB_API_KEY;
 
 // Create axios instance with default config

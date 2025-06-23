@@ -127,6 +127,9 @@ module.exports = (req, res) => {
   // based on the route configuration
   req.url = req.url.replace(/^\/api/, '');
   
+  // Add logging for debugging
+  console.log(`Handling API request: ${req.method} ${req.url}`);
+  
   // Let the Express app handle the request
   return app(req, res);
 };
