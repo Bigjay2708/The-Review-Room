@@ -65,6 +65,11 @@ app.use('/api/users', usersRouter);
 app.use('/api/movies', moviesRouter);
 app.use('/api/reviews', reviewsRouter);
 
+// Simple public test endpoint
+app.get('/test', (req: Request, res: Response) => {
+  res.json({ message: 'Public endpoint working', timestamp: new Date().toISOString() });
+});
+
 // Health check route - Git deployment test
 app.get('/api/health', (req: Request, res: Response) => {
   res.json({ 
