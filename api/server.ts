@@ -65,12 +65,13 @@ app.use('/api/users', usersRouter);
 app.use('/api/movies', moviesRouter);
 app.use('/api/reviews', reviewsRouter);
 
-// Health check route
+// Health check route - Git deployment test
 app.get('/api/health', (req: Request, res: Response) => {
   res.json({ 
     status: 'ok',
     timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV || 'development'
+    environment: process.env.NODE_ENV || 'development',
+    deployment: 'git-connected'
   });
 });
 
