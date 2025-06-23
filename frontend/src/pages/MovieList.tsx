@@ -40,16 +40,18 @@ const MovieList: React.FC = () => {
     console.log('MovieList mounted or deps changed. Page:', page, 'Category:', category);
     fetchMovies();
     // eslint-disable-next-line
-  }, [page, category]);
-  const fetchMovies = async () => {
+  }, [page, category]);  const fetchMovies = async () => {
     try {
       setLoading(true);
+      setError(null); // Clear previous errors
+      
+      console.log(`Fetching ${categories[category].label} movies, page ${page}`);
       const response = await categories[category].fetch(page);
       
       console.log('API Response:', response);
       
       // Check if response and results exist before updating state
-      if (response && response.results) {
+      if (response && Array.isArray(response.results)) {
         setMovieList(response.results);
         setTotalPages(response.total_pages || 1);
         setTotalResults(response.total_results || 0);
@@ -61,6 +63,16 @@ const MovieList: React.FC = () => {
       }
     } catch (err: any) {
       console.error('Error in fetchMovies:', err);
+      
+      // Extract detailed error information
+      const errorDetails = {
+        message: err.message,
+        response: err.response?.data,
+        status: err.response?.status,
+        headers: err.response?.headers,
+      };
+      console.error('Error details:', errorDetails);
+      
       setError(err.response?.data?.message || err.message || 'Failed to fetch movies');
       // Set empty movie list to prevent map errors
       setMovieList([]);

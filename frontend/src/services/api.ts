@@ -30,11 +30,27 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Add response interceptor to handle token expiration
+// Add response interceptor to handle errors and validate response format
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    // Check if response data is valid
+    if (response.data && (response.data.results || response.data.id)) {
+      return response;
+    } else {
+      console.error('Invalid API response format:', response.data);
+      return Promise.reject(new Error('Invalid API response format'));
+    }
+  },
   async (error: any) => {
     const originalRequest = error.config as any & { _retry?: boolean };
+    
+    console.error('API error interceptor:', {
+      url: originalRequest?.url,
+      method: originalRequest?.method,
+      status: error.response?.status,
+      data: error.response?.data,
+      message: error.message
+    });
     
     // If error is 401 (Unauthorized) and it's not a retry
     if (error.response?.status === 401 && !originalRequest._retry) {
@@ -57,17 +73,31 @@ export const fetchPopularMovies = async (page: number = 1): Promise<{ results: M
     console.log(`Fetching popular movies with page=${page}`);
     const response = await api.get<{ results: Movie[]; total_results: number; page: number; total_pages: number }>(`/movies/popular`, {
       params: { page },
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      }
     });
+    
     console.log('Popular movies API response:', response);
+    
+    // Validate response structure
+    if (!response.data || !Array.isArray(response.data.results)) {
+      console.error('Invalid API response format:', response.data);
+      throw new Error('Invalid API response format');
+    }
+    
     return response.data;
   } catch (error: any) {
     console.error('Error fetching popular movies:', error);
     console.error('Error details:', {
       message: error.message,
       response: error.response?.data,
-      status: error.response?.status
+      status: error.response?.status,
+      headers: error.response?.headers
     });
-      // Fallback data to prevent blank screen
+    
+    // Fallback data to prevent blank screen
     return {
       results: [
         {

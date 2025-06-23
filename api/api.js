@@ -3,10 +3,16 @@ const express = require('express');
 const cors = require('cors');
 const app = express();
 
+// Logging middleware to debug request handling
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.originalUrl || req.url}`);
+  next();
+});
+
 // Parse JSON
 app.use(express.json());
 
-// Enable CORS
+// Enable CORS - more permissive version
 app.use(cors({
   origin: '*',
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
@@ -14,12 +20,52 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
+// Add additional headers to all responses
+app.use((req, res, next) => {
+  // Set the Content-Type header for all responses
+  res.setHeader('Content-Type', 'application/json');
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  
+  // Handle preflight requests
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+  
+  next();
+});
+
 // Health check endpoint
 app.get('/health', (req, res) => {
   res.json({ 
     status: 'ok',
     timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV || 'development'
+    environment: process.env.NODE_ENV || 'development',
+    headers: req.headers,
+    path: req.path,
+    originalUrl: req.originalUrl || req.url
+  });
+});
+
+// Debug endpoint to help diagnose routing issues
+app.get('/debug', (req, res) => {
+  res.json({
+    timestamp: new Date().toISOString(),
+    request: {
+      method: req.method,
+      url: req.url,
+      originalUrl: req.originalUrl,
+      path: req.path,
+      query: req.query,
+      headers: req.headers
+    },
+    environment: {
+      NODE_ENV: process.env.NODE_ENV,
+      VERCEL: process.env.VERCEL,
+      VERCEL_ENV: process.env.VERCEL_ENV,
+      VERCEL_URL: process.env.VERCEL_URL
+    }
   });
 });
 
@@ -190,8 +236,9 @@ app.get('/movies/:id', (req, res) => {
 
 // 404 handler for API routes
 app.use((req, res) => {
+  console.log(`404 Error: ${req.method} ${req.originalUrl || req.url}`);
   res.status(404).json({ 
-    error: `API route not found: ${req.method} ${req.originalUrl}`,
+    error: `API route not found: ${req.method} ${req.originalUrl || req.url}`,
     timestamp: new Date().toISOString()
   });
 });
@@ -204,7 +251,14 @@ module.exports = (req, res) => {
   // Strip /api prefix from URL
   if (req.url.startsWith('/api')) {
     req.url = req.url.replace(/^\/api/, '');
+    console.log(`Rewritten URL: ${req.url}`);
   }
+  
+  // Ensure response headers are set
+  res.setHeader('Content-Type', 'application/json');
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type, Accept, Authorization');
   
   // Handle OPTIONS requests for CORS preflight
   if (req.method === 'OPTIONS') {

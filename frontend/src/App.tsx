@@ -13,6 +13,7 @@ import ResetPassword from './pages/ResetPassword';
 import { AuthProvider } from './hooks/useAuth';
 import UserProfile from './pages/UserProfile';
 import Debug from './pages/Debug';
+import ApiDebug from './pages/ApiDebug';
 
 // Create a dark theme for the application
 const theme = createTheme({
@@ -64,8 +65,9 @@ const App: React.FC = () => {
                 {/* Public movie details but with protected review features */}
                 <Route path="/movies/:id" element={<MovieDetails />} />
                 
-                {/* Debug route */}
+                {/* Debug routes */}
                 <Route path="/debug" element={<Debug />} />
+                <Route path="/api-debug" element={<ApiDebug />} />
                 
                 {/* Protected routes */}
                 <Route element={<ProtectedRoute />}>
