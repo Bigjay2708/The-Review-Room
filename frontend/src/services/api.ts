@@ -1,8 +1,16 @@
 import axios from 'axios';
 import { Movie, User, AuthResponse } from '../types';
 
-// Use environment variable with fallback, prefixed with /api for consistency
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || '/api';
+// Use environment variable with fallback
+// For production deployed on Vercel, we need to handle API URLs differently
+const isProduction = process.env.NODE_ENV === 'production';
+const API_BASE_URL = isProduction 
+  ? '/api'  // Use relative path in production (handled by Vercel rewrites)
+  : process.env.REACT_APP_API_BASE_URL || '/api'; 
+
+// For debugging - log the API base URL
+console.log(`API Base URL: ${API_BASE_URL}, isProduction: ${isProduction}`);
+
 const TMDB_API_KEY = process.env.REACT_APP_TMDB_API_KEY;
 
 // Create axios instance with default config
@@ -80,7 +88,17 @@ api.interceptors.response.use(
 
 export const fetchPopularMovies = async (page: number = 1): Promise<{ results: Movie[]; total_pages: number; total_results: number; page: number }> => {
   try {
-    console.log(`Fetching popular movies with page=${page}`);
+    console.log(`Fetching popular movies with page=${page} from ${api.defaults.baseURL}/movies/popular`);
+    
+    // Try direct API call first to debug
+    try {
+      const directResponse = await fetch(`${window.location.origin}/api/movies/popular?page=${page}`);
+      console.log('Direct fetch response:', await directResponse.clone().text());
+    } catch (e) {
+      console.error('Direct fetch failed:', e);
+    }
+    
+    // Use the axios instance for the actual request
     const response = await api.get(`/movies/popular`, {
       params: { page },
       headers: {
