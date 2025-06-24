@@ -3,9 +3,8 @@
   "version": "1.0.0",
   "description": "Movie review application",
   "private": true,  "scripts": {
-    "build": "npm run build:frontend",
+    "build": "node vercel-fix.js && cd frontend && npm install && npm run build",
     "build:api": "cd api && npm install",
-    "build:frontend": "cd frontend && npm install && cross-env CI=false npm run build",
     "dev": "concurrently \"npm run dev:api\" \"npm run dev:frontend\"",
     "dev:api": "cd api && npm run dev",
     "dev:frontend": "cd frontend && npm start",
