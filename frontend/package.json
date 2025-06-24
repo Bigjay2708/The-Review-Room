@@ -6,10 +6,10 @@
   "scripts": {
     "start": "react-scripts start",
     "dev": "npm start",
-    "build": "cross-env CI=false react-scripts build",
+    "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "vercel-build": "cross-env CI=false npm run build"
+    "vercel-build": "react-scripts build"
   },
   "keywords": [],
   "author": "",
